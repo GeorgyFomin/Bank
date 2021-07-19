@@ -1,0 +1,62 @@
+﻿<ContentControl x:Name="Loans" x:Class="WpfBank.LoanControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:local="clr-namespace:WpfBank" xmlns:viewmodels="clr-namespace:WpfBank.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:LoanViewModel}"
+                mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Style="{StaticResource ResourceKey=BlackNavy}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Loans" FontSize="20"/>
+        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" Grid.Row="1"  x:Name="loanGrid" ItemsSource="{Binding Loans}" DataContext="{Binding Mode=OneWay}" 
+                  AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Number" Binding="{Binding Number}"/>
+                <DataGridTextColumn Header="Size" Binding="{Binding Size}"/>
+                <DataGridTextColumn Header="Rate" Binding="{Binding Rate}"/>
+                <DataGridCheckBoxColumn Header="Cap" Binding="{Binding Cap}"/>
+            </DataGrid.Columns>
+            <DataGrid.ColumnHeaderStyle>
+                <Style BasedOn="{StaticResource ResourceKey=BlackNavy}"/>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.RowStyle>
+                <Style BasedOn="{StaticResource ResourceKey=BlackNavy}"/>
+            </DataGrid.RowStyle>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction Command="{Binding SelCommand}" CommandParameter="{Binding ElementName=loanGrid}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="MouseRightButtonDown">
+                    <i:InvokeCommandAction Command="{Binding RemoveLoanCommand}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command="{Binding AddLoanCommand}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="CellEditEnding">
+                    <i:InvokeCommandAction Command="{Binding EndLoanEditCommand}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </DataGrid>
+        <!--<ListView x:Name="loansListView" ItemContainerStyle="{DynamicResource ListViewItemStyle1}" Style="{StaticResource listViewStyle}" 
+                  MaxWidth="400" MaxHeight="400" ItemsSource="{Binding Loans}" >
+            <ListView.ToolTip>
+                <ToolTip Style="{StaticResource toolTipStyle}">
+                    Кредиты
+                </ToolTip>
+            </ListView.ToolTip>
+            <ListView.View>
+                <GridView ColumnHeaderContainerStyle="{StaticResource headerStyle}">
+                    <GridViewColumn Header="Number" DisplayMemberBinding="{Binding Number}"/>
+                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding Size}"/>
+                    <GridViewColumn Header="Rate" DisplayMemberBinding="{Binding Rate}"/>
+                    <GridViewColumn Header="Cap" DisplayMemberBinding="{Binding Cap}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>-->
+    </Grid>
+</ContentControl>

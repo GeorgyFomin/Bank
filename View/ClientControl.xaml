@@ -1,0 +1,63 @@
+﻿<ContentControl x:Name="Clients" x:Class="WpfBank.ClientControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WpfBank" xmlns:viewmodels="clr-namespace:WpfBank.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:ClientViewModel}"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Stretch" Text="Clients" VerticalAlignment="Center" Foreground="{StaticResource textColor}" 
+                   Background="{StaticResource mainBckgr}" FontSize="24"/>
+        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding Clients}" DataContext="{Binding Mode=OneWay}" 
+                  AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}">
+            <DataGrid.ColumnHeaderStyle>
+                <Style BasedOn="{StaticResource ResourceKey=BlackNavy}"/>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.RowStyle>
+                <Style BasedOn="{StaticResource ResourceKey=BlackNavy}">
+                    <!--<Setter Property="ToolTip">
+                        <Setter.Value>
+                            <TextBlock Text="{Binding DepID}" />
+                        </Setter.Value>
+                    </Setter>-->
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+            </DataGrid.Columns>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction Command="{Binding SelCommand}" CommandParameter="{Binding ElementName=clientsGrid}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="MouseRightButtonDown">
+                    <i:InvokeCommandAction Command="{Binding RemoveClientCommand}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command="{Binding AddClientCommand}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="CellEditEnding">
+                    <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </DataGrid>
+        <!--<ListView x:Name="clientsListView" ItemContainerStyle="{DynamicResource ListViewItemStyle1}" Style="{StaticResource listViewStyle}" 
+                  MaxWidth="100" MaxHeight="400" ItemsSource="{Binding Clients}">
+            <ListView.ToolTip>
+                <ToolTip Style="{StaticResource toolTipStyle}">
+                    Клиенты
+                </ToolTip>
+            </ListView.ToolTip>
+            <ListView.View>
+                <GridView ColumnHeaderContainerStyle="{StaticResource headerStyle}">
+                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>-->
+    </Grid>
+</ContentControl>
