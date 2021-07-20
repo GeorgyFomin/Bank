@@ -34,9 +34,6 @@
                 <i:EventTrigger EventName="MouseRightButtonDown">
                     <i:InvokeCommandAction Command="{Binding RemoveLoanCommand}"/>
                 </i:EventTrigger>
-                <i:EventTrigger EventName="MouseDoubleClick">
-                    <i:InvokeCommandAction Command="{Binding AddLoanCommand}"/>
-                </i:EventTrigger>
                 <i:EventTrigger EventName="CellEditEnding">
                     <i:InvokeCommandAction Command="{Binding EndLoanEditCommand}" />
                 </i:EventTrigger>

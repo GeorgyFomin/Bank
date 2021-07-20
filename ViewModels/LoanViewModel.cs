@@ -17,7 +17,6 @@ namespace WpfBank.ViewModels
         private Client client;
         private RelayCommand selCommand;
         private RelayCommand removeLoanCommand;
-        private RelayCommand addLoanCommand;
         private RelayCommand clientSelectedCommand;
         private RelayCommand oKCommand;
         private RelayCommand endLoanEditCommand;
@@ -31,7 +30,6 @@ namespace WpfBank.ViewModels
         public ICommand SelCommand => selCommand ?? (selCommand =
             new RelayCommand((e) => Loan = (e as DataGrid).SelectedItem is Account depo ? depo : null));
         public ICommand RemoveLoanCommand => removeLoanCommand ?? (removeLoanCommand = new RelayCommand(RemoveLoan));
-        public ICommand AddLoanCommand => addLoanCommand ?? (addLoanCommand = new RelayCommand(AddLoan));
         public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
         public bool ClientDoSelected { get => clientDoSelected; set { clientDoSelected = value; RaisePropertyChanged(nameof(ClientDoSelected)); } }
         public ICommand OKCommand => oKCommand ?? (oKCommand = new RelayCommand((e) =>
@@ -40,8 +38,7 @@ namespace WpfBank.ViewModels
             Client = dialog.clientListBox.SelectedItem is Client client ? client : null;
             dialog.DialogResult = true;
         }));
-        public ICommand EndLoanEditCommand => endLoanEditCommand ?? (endLoanEditCommand =
-            new RelayCommand((e) => MainViewModel.Log($"Поля кредита {loan} отредактированы.")));
+        public ICommand EndLoanEditCommand => endLoanEditCommand ?? (endLoanEditCommand = new RelayCommand(EditOrAddLoan));
         #endregion
         public LoanViewModel(Bank bank) : this() => this.bank = bank;
         public LoanViewModel() { }
@@ -55,15 +52,18 @@ namespace WpfBank.ViewModels
                 MainViewModel.Log($"Удален кредит {loan}");
             }
         }
-        private void AddLoan(object obj)
+        private void EditOrAddLoan(object e)
         {
-            if (loan == null || loan.ClientID != default)
-                return;
-            ClientsDialog dialog = new ClientsDialog();
-            dialog.DataContext = this;
-            if ((bool)dialog.ShowDialog() && Client != null)
-                AddLoanToClient();
-            RaisePropertyChanged(nameof(Loans));
+            if (loan.ClientID != default)
+                MainViewModel.Log($"Поля кредита {loan} отредактированы.");
+            else
+            {
+                ClientsDialog dialog = new ClientsDialog();
+                dialog.DataContext = this;
+                if ((bool)dialog.ShowDialog() && Client != null)
+                    AddLoanToClient();
+                RaisePropertyChanged(nameof(Loans));
+            }
         }
         private void AddLoanToClient()
         {
