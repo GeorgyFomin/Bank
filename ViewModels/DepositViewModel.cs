@@ -1,4 +1,6 @@
-﻿using System.Windows.Input;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using WpfBank.Commands;
 using ClassLibrary;
 using System.Collections.ObjectModel;
@@ -23,11 +25,11 @@ namespace WpfBank.ViewModels
         private RelayCommand depoToSelectedCommand;
         private RelayCommand oKDepoToCommand;
         private RelayCommand endDepoEditCommand;
-        private RelayCommand addItemCommand;
         private bool clientDoSelected;
         private bool transferEnabled;
         private Account depoTo;
         private decimal transferAmount;
+        private bool depoFromSelected;
         #endregion
         #region Properties
         public ObservableCollection<Account> Depos { get => bank.Deposits; }
@@ -35,40 +37,22 @@ namespace WpfBank.ViewModels
         public Account Depo { get => depo; set { depo = value; RaisePropertyChanged(nameof(Depo)); } }
         public Client Client { get => client; set { client = value; RaisePropertyChanged(nameof(Client)); } }
         public ICommand SelCommand => selCommand ?? (selCommand =
-            new RelayCommand((e) => Depo = (e as DataGrid).SelectedItem is Account depo ? depo : null));
+            new RelayCommand((e) => DepoFromSelected = (Depo = (e as DataGrid).SelectedItem is Account depo ? depo : null) != null));
         public ICommand RemoveDepoCommand => removeDepoCommand ?? (removeDepoCommand = new RelayCommand(RemoveDepo));
         public ICommand TransferCommand => transferCommand ?? (transferCommand = new RelayCommand(Transfer));
         public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
         public bool ClientDoSelected { get => clientDoSelected; set { clientDoSelected = value; RaisePropertyChanged(nameof(ClientDoSelected)); } }
         public bool TransferEnabled { get => transferEnabled; set { transferEnabled = value; RaisePropertyChanged(nameof(TransferEnabled)); } }
-        public ICommand OKCommand => oKCommand ?? (oKCommand = new RelayCommand((e) =>
-        {
-            ClientsDialog dialog = e as ClientsDialog;
-            Client = dialog.clientListBox.SelectedItem is Client client ? client : null;
-            dialog.DialogResult = true;
-        }));
+        public ICommand OKCommand => oKCommand ?? (oKCommand = new RelayCommand(OkClientOfAddedDeposit));
         public Account DepoTo { get => depoTo; set { depoTo = value; RaisePropertyChanged(nameof(DepoTo)); } }
         public decimal TransferAmount { get => transferAmount; set { transferAmount = value; RaisePropertyChanged(nameof(TransferAmount)); } }
         public ICommand OKDepoToCommand => oKDepoToCommand ?? (oKDepoToCommand = new RelayCommand((e) => (e as TransferDialog).DialogResult = true));
-        public ICommand DepoToSelectedCommand => depoToSelectedCommand ??
-            (depoToSelectedCommand = new RelayCommand((e) =>
-            {
-                DepoTo = (e as ListBox).SelectedItem is Account depo ? depo : null;
-                if (depoTo == null)
-                    return;
-                if (depoTo.ID == Depo.ID)
-                {
-                    MessageBox.Show("Нельзя делать перевод внутри одного и того же счета!!");
-                    return;
-                }
-                TransferEnabled = true;
-            }));
-        public ICommand EndDepoEditCommand => endDepoEditCommand ?? (endDepoEditCommand =
-            new RelayCommand((e) => MainViewModel.Log($"Поля депозита {Depo} отредактированы.")));
-        public ICommand AddItemCommand => addItemCommand ?? (addItemCommand = new RelayCommand(AddItem));
+        public ICommand DepoToSelectedCommand => depoToSelectedCommand ?? (depoToSelectedCommand = new RelayCommand(DepoToTransfer));
+        public ICommand EndDepoEditCommand => endDepoEditCommand ?? (endDepoEditCommand = new RelayCommand(EditOrAddDeposit));
+        public bool DepoFromSelected { get => depoFromSelected; set { depoFromSelected = value; RaisePropertyChanged(nameof(DepoFromSelected)); } }
         #endregion
         public DepositViewModel(Bank bank) : this() => this.bank = bank;
-        public DepositViewModel() { transferEnabled = clientDoSelected = false; }
+        public DepositViewModel() { depoFromSelected = transferEnabled = clientDoSelected = false; }
         private void RemoveDepo(object obj)
         {
             if (depo != null &&
@@ -101,12 +85,32 @@ namespace WpfBank.ViewModels
             DepoTo.Size += TransferAmount;
             MainViewModel.Log($"Со счета {depo} переведено {TransferAmount} на счет {depoTo}");
         }
-        private void AddItem(object commandParameter)
+        private void DepoToTransfer(object e)
         {
-            if (depo == null || depo.ClientID != default)
+            if ((DepoTo = (e as ListBox).SelectedItem is Account depo ? depo : null) == null)
                 return;
-            TryToAdd();
-            RaisePropertyChanged(nameof(Depos));
+            if (depoTo.ID == Depo.ID)
+            {
+                MessageBox.Show("Нельзя делать перевод внутри одного и того же счета!!");
+                return;
+            }
+            TransferEnabled = true;
+        }
+        private void OkClientOfAddedDeposit(object e)
+        {
+            ClientsDialog dialog = e as ClientsDialog;
+            Client = dialog.clientListBox.SelectedItem is Client client ? client : null;
+            dialog.DialogResult = true;
+        }
+        private void EditOrAddDeposit(object e)
+        {
+            if (depo.ClientID != default)
+                MainViewModel.Log($"Поля депозита {Depo} отредактированы.");
+            else
+            {
+                TryToAdd();
+                RaisePropertyChanged(nameof(Depos));
+            }
         }
         private void TryToAdd()
         {

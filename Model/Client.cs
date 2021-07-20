@@ -9,7 +9,7 @@ namespace ClassLibrary
         /// <summary>
         /// Хранит список вкладов.
         /// </summary>
-        private List<Account> accounts = new List<Account>();
+        private List<Account> accounts;
         #region Properties
         /// <summary>
         /// Устанавливает и возвращает ссылки на счета клиента.
@@ -31,10 +31,7 @@ namespace ClassLibrary
         public Guid DepID { get; set; }
         #endregion
         public Client() : base() { }
-        public Client(string name = null, List<Account> accounts = null) : base(name)
-        {
-            Accounts = accounts;
-        }
+        public Client(string name = null, List<Account> accounts = null) : base(name) => Accounts = accounts;
 
         /// <summary>
         /// Печатает сведения о клиенте.

@@ -12,7 +12,12 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition />
         </Grid.RowDefinitions>
-        <TextBlock Text="Deposits" FontSize="20"/>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Deposits" FontSize="20"/>
+            <Button Content="Оформить перевод" Style="{StaticResource headerBtn}" FontSize="20" Background="#00000000" Margin="10,0,0,0" 
+                    IsDefault="True" Command="{Binding TransferCommand}" IsEnabled="{Binding DepoFromSelected}" BorderBrush="#FF40E80F">
+            </Button>
+        </StackPanel>
         <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" Style="{StaticResource ResourceKey=BlackNavy}" x:Name="depoGrid" Grid.Row="1" ItemsSource="{Binding Depos}" 
                   DataContext="{Binding Mode=OneWay}" AutoGenerateColumns="False" >
             <DataGrid.ColumnHeaderStyle>
@@ -34,14 +39,8 @@
                 <i:EventTrigger EventName="MouseRightButtonDown">
                     <i:InvokeCommandAction Command="{Binding RemoveDepoCommand}"/>
                 </i:EventTrigger>
-                <i:EventTrigger EventName="MouseLeftButtonDown">
-                    <i:InvokeCommandAction Command="{Binding TransferCommand}"/>
-                </i:EventTrigger>
                 <i:EventTrigger EventName="CellEditEnding">
                     <i:InvokeCommandAction Command="{Binding EndDepoEditCommand}" />
-                </i:EventTrigger>
-                <i:EventTrigger EventName="MouseDoubleClick">
-                    <i:InvokeCommandAction Command="{Binding AddItemCommand}"/>
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </DataGrid>

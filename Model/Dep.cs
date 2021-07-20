@@ -8,7 +8,7 @@ namespace ClassLibrary
         /// <summary>
         /// Хранит список клиентов.
         /// </summary>
-        List<Client> clients = new List<Client>();
+        private List<Client> clients;
         #region Properties
         /// <summary>
         /// Устанавливает и возвращает ссылки на клиентов.

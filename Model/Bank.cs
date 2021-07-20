@@ -8,17 +8,14 @@ namespace ClassLibrary
         /// <summary>
         /// Хранит список отделов банка.
         /// </summary>
-        private ObservableCollection<Dep> deps = new ObservableCollection<Dep>();
+        private ObservableCollection<Dep> deps;
         /// <summary>
         /// Устанавливает и возвращает ссылки на отделы банка.
         /// </summary>
-        public ObservableCollection<Dep> Deps { get => deps; set => deps = value ?? new ObservableCollection<Dep>(); }
+        public ObservableCollection<Dep> Deps => deps ?? (deps = new ObservableCollection<Dep>());
         public Bank() : base() { }
-        public Bank(string name = null, ObservableCollection<Dep> deps = null) : base(name) => Deps = deps;
-        public override string ToString()
-        {
-            return "Bank " + base.ToString();
-        }
+        public Bank(string name = null, ObservableCollection<Dep> deps = null) : base(name) => this.deps = deps;
+        public override string ToString() => "Bank " + base.ToString();
         /// <summary>
         /// Возвращает список всех депозитов банка.
         /// </summary>
