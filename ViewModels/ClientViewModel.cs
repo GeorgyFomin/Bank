@@ -1,9 +1,6 @@
 ﻿using ClassLibrary;
-using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -26,14 +23,31 @@ namespace WpfBank.ViewModels
         private bool depDoSelected;
         #endregion
         #region Properties
-        public ObservableCollection<Client> Clients { get => bank.Clients; }
+        /// <summary>
+        /// Возвращает список всех клиентов банка.
+        /// </summary>
+        public ObservableCollection<Client> Clients
+        {
+            get
+            {
+                ObservableCollection<Client> clients = new ObservableCollection<Client>();
+                foreach (Dep dep in bank.Deps)
+                {
+                    foreach (Client client in dep.Clients)
+                    {
+                        clients.Add(client);
+                    }
+                }
+                return clients;
+            }
+        }
         public ObservableCollection<Dep> Deps { get => bank.Deps; }
         public Client Client { get => client; set { client = value; RaisePropertyChanged(nameof(Client)); } }
         public Dep Dep { get => dep; set { dep = value; RaisePropertyChanged(nameof(Dep)); } }
         public ICommand SelCommand => selCommand ?? (selCommand =
             new RelayCommand((e) => Client = (e as DataGrid).SelectedItem is Client client ? client : null));
         public ICommand RemoveClientCommand => removeClientCommand ?? (removeClientCommand = new RelayCommand(RemoveClient));
-        public ICommand AddClientCommand => addClientCommand ?? (addClientCommand = new RelayCommand(AddClient));
+        public ICommand AddClientCommand => addClientCommand ?? (addClientCommand = new RelayCommand(EditClient));
         public ICommand DepSelectedCommand => depSelectedCommand ?? (depSelectedCommand = new RelayCommand((e) => DepDoSelected = true));
         public bool DepDoSelected { get => depDoSelected; set { depDoSelected = value; RaisePropertyChanged(nameof(DepDoSelected)); } }
         public ICommand OKCommand => oKCommand ?? (oKCommand = new RelayCommand((e) =>
@@ -42,8 +56,7 @@ namespace WpfBank.ViewModels
             Dep = window.depListBox.SelectedItem is Dep dep ? dep : null;
             window.DialogResult = true;
         }));
-        public ICommand EndClientEditCommand => endClientEditCommand ?? (endClientEditCommand = new RelayCommand(
-            (e) => MainViewModel.Log($"Имя клиента {Client} отредактировано.")));
+        public ICommand EndClientEditCommand => endClientEditCommand ?? (endClientEditCommand = new RelayCommand(EditClient));
         #endregion
         public ClientViewModel(Bank bank) : this() => this.bank = bank;
         public ClientViewModel() { depDoSelected = false; }
@@ -57,21 +70,24 @@ namespace WpfBank.ViewModels
                 MainViewModel.Log($"Удален клиент {client}");
             }
         }
+        private void EditClient(object commandParameter)
+        {
+            if (client == null)
+                return;
+            if (client.DepID != default)
+            {
+                MainViewModel.Log($"Имя клиента {Client} отредактировано.");
+                return;
+            }
+            if ((bool)new DepsDialog { DataContext = this }.ShowDialog() && Dep != null)
+                AddClientTo(Dep);
+        }
         private void AddClientTo(Dep dep)
         {
             client.DepID = dep.ID;
             dep.Clients.Add(client);
+            RaisePropertyChanged(nameof(Client));
             MainViewModel.Log($"В отдел {dep} добавлен клиент {client}.");
-        }
-        private void AddClient(object commandParameter)
-        {
-            if (client == null || client.DepID != default)
-                return;
-            DepsDialog dialog = new DepsDialog();
-            dialog.DataContext = this;
-            if ((bool)dialog.ShowDialog() && Dep != null)
-                AddClientTo(Dep);
-            RaisePropertyChanged(nameof(Clients));
         }
     }
 }

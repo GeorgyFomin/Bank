@@ -1,7 +1,4 @@
-﻿using ClassLibrary;
-using System;
-using System.Windows;
-using WpfBank.ViewModels;
+﻿using System.Windows;
 
 namespace WpfBank
 {
@@ -10,10 +7,6 @@ namespace WpfBank
     /// </summary>
     public partial class MWindow : Window
     {
-        public MWindow()
-        {
-            InitializeComponent();
-            DataContext = new MainViewModel();
-        }
+        public MWindow() => InitializeComponent();
     }
 }

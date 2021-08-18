@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 
 namespace ClassLibrary
@@ -9,16 +9,17 @@ namespace ClassLibrary
         /// <summary>
         /// Хранит список вкладов.
         /// </summary>
-        private List<Account> accounts;
+        private ObservableCollection<Account> accounts = new ObservableCollection<Account>();
         #region Properties
         /// <summary>
         /// Устанавливает и возвращает ссылки на счета клиента.
         /// </summary>
-        public List<Account> Accounts
+        public ObservableCollection<Account> Accounts
         {
-            get => accounts; set
+            get => accounts;
+            set
             {
-                accounts = value ?? new List<Account>();
+                accounts = value ?? new ObservableCollection<Account>();
                 foreach (Account account in accounts)
                 {
                     account.ClientID = ID;
@@ -31,8 +32,7 @@ namespace ClassLibrary
         public Guid DepID { get; set; }
         #endregion
         public Client() : base() { }
-        public Client(string name = null, List<Account> accounts = null) : base(name) => Accounts = accounts;
-
+        public Client(string name = null, ObservableCollection<Account> accounts = null) : base(name) => Accounts = accounts;
         /// <summary>
         /// Печатает сведения о клиенте.
         /// </summary>

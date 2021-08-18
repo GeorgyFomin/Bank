@@ -1,9 +1,10 @@
-﻿<ContentControl x:Name="Clients" x:Class="WpfBank.ClientControl"
+﻿<ContentControl x:Name="clientControl" x:Class="WpfBank.ClientControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:WpfBank" xmlns:viewmodels="clr-namespace:WpfBank.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:ClientViewModel}"
+             xmlns:local="clr-namespace:WpfBank" xmlns:viewmodels="clr-namespace:WpfBank.ViewModels" 
+                d:DataContext="{d:DesignInstance Type=viewmodels:ClientViewModel}"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -14,22 +15,33 @@
         </Grid.RowDefinitions>
         <TextBlock HorizontalAlignment="Stretch" Text="Clients" VerticalAlignment="Center" Foreground="{StaticResource textColor}" 
                    Background="{StaticResource mainBckgr}" FontSize="24"/>
-        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding Clients}" DataContext="{Binding Mode=OneWay}" 
-                  AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}">
+        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding Clients}" 
+                  AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}" RowStyle="{StaticResource RowStyle}" 
+                  CellStyle="{StaticResource CellStyle}">
+            <!--<ScrollBar>
+                <ScrollBar.Style>
+                    <Style TargetType="{x:Type ScrollBar}">
+                        <Style.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter Property="Width" Value="Auto" />
+                                <Setter Property="Height" Value="18" />
+                                <Setter Property="Template" Value="{StaticResource HorizontalScrollBar}" />
+                            </Trigger>
+                            <Trigger Property="Orientation" Value="Vertical">
+                                <Setter Property="Width" Value="18" />
+                                <Setter Property="Height" Value="Auto" />
+                                <Setter Property="Template" Value="{StaticResource VerticalScrollBar}" />
+                            </Trigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </ScrollBar.Style>
+            </ScrollBar>-->
             <DataGrid.ColumnHeaderStyle>
                 <Style BasedOn="{StaticResource ResourceKey=BlackNavy}"/>
             </DataGrid.ColumnHeaderStyle>
-            <DataGrid.RowStyle>
-                <Style BasedOn="{StaticResource ResourceKey=BlackNavy}">
-                    <!--<Setter Property="ToolTip">
-                        <Setter.Value>
-                            <TextBlock Text="{Binding DepID}" />
-                        </Setter.Value>
-                    </Setter>-->
-                </Style>
-            </DataGrid.RowStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" EditingElementStyle="{StaticResource EditingCellTextBox}"/>
             </DataGrid.Columns>
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="SelectionChanged">
@@ -38,11 +50,8 @@
                 <i:EventTrigger EventName="MouseRightButtonDown">
                     <i:InvokeCommandAction Command="{Binding RemoveClientCommand}"/>
                 </i:EventTrigger>
-                <i:EventTrigger EventName="MouseDoubleClick">
-                    <i:InvokeCommandAction Command="{Binding AddClientCommand}"/>
-                </i:EventTrigger>
                 <i:EventTrigger EventName="CellEditEnding">
-                    <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" />
+                    <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </DataGrid>

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 
 namespace ClassLibrary
@@ -8,25 +8,26 @@ namespace ClassLibrary
         /// <summary>
         /// Хранит список клиентов.
         /// </summary>
-        private List<Client> clients;
+        private ObservableCollection<Client> clients = new ObservableCollection<Client>();
         #region Properties
         /// <summary>
         /// Устанавливает и возвращает ссылки на клиентов.
         /// </summary>
-        public List<Client> Clients
+        public ObservableCollection<Client> Clients
         {
-            get => clients; set
+            get => clients;
+            set
             {
-                clients = value ?? new List<Client>();
+                clients = value ?? new ObservableCollection<Client>();
                 foreach (Client client in clients)
                 {
                     client.DepID = ID;
                 }
             }
         }
-        public Dep() : base() { }
         #endregion
-        public Dep(string name = null, List<Client> clients = null) : base(name) => Clients = clients;
+        public Dep() : base() { }
+        public Dep(string name = null, ObservableCollection<Client> clients = null) : base(name) => Clients = clients;
         /// <summary>
         /// Печатает сведения об отделе.
         /// </summary>

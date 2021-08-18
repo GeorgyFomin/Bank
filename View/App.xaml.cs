@@ -8,12 +8,12 @@ namespace WpfBank
     /// </summary>
     public partial class App : Application
     {
-        //protected override void OnStartup(StartupEventArgs e)
-        //{
-        //    MainViewModel mainViewModel = new MainViewModel();
-        //    MWindow mainWindow = new MWindow() { DataContext = mainViewModel };
-        //    mainWindow.Show();
-        //    base.OnStartup(e);
-        //}
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            MainViewModel mainViewModel = new MainViewModel();
+            MWindow mainWindow = new MWindow() { DataContext = mainViewModel };
+            mainWindow.Show();
+            base.OnStartup(e);
+        }
     }
 }

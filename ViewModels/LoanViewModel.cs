@@ -23,12 +23,50 @@ namespace WpfBank.ViewModels
         private bool clientDoSelected;
         #endregion
         #region Properties
-        public ObservableCollection<Account> Loans { get => bank.Loans; }
-        public ObservableCollection<Client> Clients { get => bank.Clients; }
+        /// <summary>
+        /// Возвращает список всех кредитов банка.
+        /// </summary>
+        public ObservableCollection<Account> Loans
+        {
+            get
+            {
+                ObservableCollection<Account> loans = new ObservableCollection<Account>();
+                foreach (Dep dep in bank.Deps)
+                {
+                    foreach (Client client in dep.Clients)
+                    {
+                        foreach (Account account in client.Accounts)
+                        {
+                            if (account.Size <= 0)
+                                loans.Add(account);
+                        }
+                    }
+                }
+                return loans;
+            }
+        }
+        /// <summary>
+        /// Возвращает список всех клиентов банка.
+        /// </summary>
+        public ObservableCollection<Client> Clients
+        {
+            get
+            {
+                ObservableCollection<Client> clients = new ObservableCollection<Client>();
+                foreach (Dep dep in bank.Deps)
+                {
+                    foreach (Client client in dep.Clients)
+                    {
+                        clients.Add(client);
+                    }
+                }
+                return clients;
+            }
+        }
         public Account Loan { get => loan; set { loan = value; RaisePropertyChanged(nameof(Loan)); } }
         public Client Client { get => client; set { client = value; RaisePropertyChanged(nameof(Client)); } }
         public ICommand SelCommand => selCommand ?? (selCommand =
-            new RelayCommand((e) => Loan = (e as DataGrid).SelectedItem is Account depo ? depo : null));
+            new RelayCommand((e) => Loan = (e as DataGrid).SelectedItem is Account loan ? loan : null));
         public ICommand RemoveLoanCommand => removeLoanCommand ?? (removeLoanCommand = new RelayCommand(RemoveLoan));
         public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
         public bool ClientDoSelected { get => clientDoSelected; set { clientDoSelected = value; RaisePropertyChanged(nameof(ClientDoSelected)); } }
@@ -38,7 +76,7 @@ namespace WpfBank.ViewModels
             Client = dialog.clientListBox.SelectedItem is Client client ? client : null;
             dialog.DialogResult = true;
         }));
-        public ICommand EndLoanEditCommand => endLoanEditCommand ?? (endLoanEditCommand = new RelayCommand(EditOrAddLoan));
+        public ICommand EndLoanEditCommand => endLoanEditCommand ?? (endLoanEditCommand = new RelayCommand(EditLoan));
         #endregion
         public LoanViewModel(Bank bank) : this() => this.bank = bank;
         public LoanViewModel() { }
@@ -52,23 +90,19 @@ namespace WpfBank.ViewModels
                 MainViewModel.Log($"Удален кредит {loan}");
             }
         }
-        private void EditOrAddLoan(object e)
+        private void EditLoan(object e)
         {
             if (loan.ClientID != default)
                 MainViewModel.Log($"Поля кредита {loan} отредактированы.");
             else
-            {
-                ClientsDialog dialog = new ClientsDialog();
-                dialog.DataContext = this;
-                if ((bool)dialog.ShowDialog() && Client != null)
-                    AddLoanToClient();
-                RaisePropertyChanged(nameof(Loans));
-            }
+                if ((bool)new ClientsDialog { DataContext = this }.ShowDialog() && Client != null)
+                AddLoanToClient();
         }
         private void AddLoanToClient()
         {
             loan.ClientID = client.ID;
             client.Accounts.Add(loan);
+            RaisePropertyChanged(nameof(Loan));
             MainViewModel.Log($"Клиенту {client} открыт кредит {loan}.");
         }
     }

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using WpfBank.Commands;
 using ClassLibrary;
 using System.Collections.ObjectModel;
@@ -32,8 +30,46 @@ namespace WpfBank.ViewModels
         private bool depoFromSelected;
         #endregion
         #region Properties
-        public ObservableCollection<Account> Depos { get => bank.Deposits; }
-        public ObservableCollection<Client> Clients { get => bank.Clients; }
+        /// <summary>
+        /// Возвращает список всех депозитов банка.
+        /// </summary>
+        public ObservableCollection<Account> Deposits
+        {
+            get
+            {
+                ObservableCollection<Account> deposits = new ObservableCollection<Account>();
+                foreach (Dep dep in bank.Deps)
+                {
+                    foreach (Client client in dep.Clients)
+                    {
+                        foreach (Account account in client.Accounts)
+                        {
+                            if (account.Size >= 0)
+                                deposits.Add(account);
+                        }
+                    }
+                }
+                return deposits;
+            }
+        }
+        /// <summary>
+        /// Возвращает список всех клиентов банка.
+        /// </summary>
+        public ObservableCollection<Client> Clients
+        {
+            get
+            {
+                ObservableCollection<Client> clients = new ObservableCollection<Client>();
+                foreach (Dep dep in bank.Deps)
+                {
+                    foreach (Client client in dep.Clients)
+                    {
+                        clients.Add(client);
+                    }
+                }
+                return clients;
+            }
+        }
         public Account Depo { get => depo; set { depo = value; RaisePropertyChanged(nameof(Depo)); } }
         public Client Client { get => client; set { client = value; RaisePropertyChanged(nameof(Client)); } }
         public ICommand SelCommand => selCommand ?? (selCommand =
@@ -48,7 +84,7 @@ namespace WpfBank.ViewModels
         public decimal TransferAmount { get => transferAmount; set { transferAmount = value; RaisePropertyChanged(nameof(TransferAmount)); } }
         public ICommand OKDepoToCommand => oKDepoToCommand ?? (oKDepoToCommand = new RelayCommand((e) => (e as TransferDialog).DialogResult = true));
         public ICommand DepoToSelectedCommand => depoToSelectedCommand ?? (depoToSelectedCommand = new RelayCommand(DepoToTransfer));
-        public ICommand EndDepoEditCommand => endDepoEditCommand ?? (endDepoEditCommand = new RelayCommand(EditOrAddDeposit));
+        public ICommand EndDepoEditCommand => endDepoEditCommand ?? (endDepoEditCommand = new RelayCommand(EditDeposit));
         public bool DepoFromSelected { get => depoFromSelected; set { depoFromSelected = value; RaisePropertyChanged(nameof(DepoFromSelected)); } }
         #endregion
         public DepositViewModel(Bank bank) : this() => this.bank = bank;
@@ -56,11 +92,11 @@ namespace WpfBank.ViewModels
         private void RemoveDepo(object obj)
         {
             if (depo != null &&
-                MessageBox.Show($"Удалить депозит №{depo.Number}?", "Удаление депозита " + depo.Number, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                MessageBox.Show($"Удалить депозит №{depo.Number}?", $"Удаление депозита №{depo.Number}", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 _ = Clients.First((g) => depo.ClientID == g.ID).Accounts.Remove(depo);
-                RaisePropertyChanged(nameof(Depos));
-                MainViewModel.Log($"Удален депозит {depo}");
+                RaisePropertyChanged(nameof(Deposits));
+                MainViewModel.Log($"Удален депозит №{depo.Number}");
             }
         }
         private void Transfer(object obj)
@@ -68,7 +104,7 @@ namespace WpfBank.ViewModels
             if (depo == null || depo.ClientID == default)
                 return;
             TryToTransfer();
-            RaisePropertyChanged(nameof(Depos));
+            RaisePropertyChanged(nameof(Deposits));
         }
         private void TryToTransfer()
         {
@@ -102,26 +138,19 @@ namespace WpfBank.ViewModels
             Client = dialog.clientListBox.SelectedItem is Client client ? client : null;
             dialog.DialogResult = true;
         }
-        private void EditOrAddDeposit(object e)
+        private void EditDeposit(object e)
         {
             if (depo.ClientID != default)
-                MainViewModel.Log($"Поля депозита {Depo} отредактированы.");
+                MainViewModel.Log($"Поля депозита №{depo.Number} отредактированы.");
             else
-            {
-                TryToAdd();
-                RaisePropertyChanged(nameof(Depos));
-            }
-        }
-        private void TryToAdd()
-        {
-            ClientsDialog dialog = new ClientsDialog { DataContext = this };
-            if ((bool)dialog.ShowDialog() && client != null)
+                if ((bool)new ClientsDialog { DataContext = this }.ShowDialog() && client != null)
                 AddDepoTo();
         }
         private void AddDepoTo()
         {
             depo.ClientID = client.ID;
             client.Accounts.Add(depo);
+            RaisePropertyChanged(nameof(Depo));
             MainViewModel.Log($"Клиенту {client} открыт депозит {depo}.");
         }
     }
