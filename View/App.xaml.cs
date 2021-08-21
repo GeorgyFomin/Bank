@@ -1,4 +1,7 @@
-﻿using System.Windows;
+﻿using System;
+using System.Configuration;
+using System.Data.SqlClient;
+using System.Windows;
 using WpfBank.ViewModels;
 
 namespace WpfBank
@@ -10,7 +13,16 @@ namespace WpfBank
     {
         protected override void OnStartup(StartupEventArgs e)
         {
-            MainViewModel mainViewModel = new MainViewModel();
+            SqlConnection sqlConnection = new SqlConnection() { ConnectionString = ConfigurationManager.ConnectionStrings["bankData"].ConnectionString };
+            try
+            {
+                sqlConnection.Open();
+            }
+            catch
+            {
+                throw;
+            }
+            MainViewModel mainViewModel = new MainViewModel(sqlConnection);
             MWindow mainWindow = new MWindow() { DataContext = mainViewModel };
             mainWindow.Show();
             base.OnStartup(e);

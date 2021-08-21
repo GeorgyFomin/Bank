@@ -1,6 +1,7 @@
 ﻿using ClassLibrary;
 using FontAwesome.Sharp;
 using System;
+using System.Data.SqlClient;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -39,18 +40,78 @@ namespace WpfBank.ViewModels
             window.WindowState = window.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
             window.MaxIconBlock.Icon = window.WindowState == WindowState.Maximized ? IconChar.WindowRestore : IconChar.WindowMaximize;
         }));
-        public ICommand CloseCommand => closeCommand ?? (closeCommand = new RelayCommand((e) => (e as MWindow).Close()));
-        public ICommand ClientsCommand => clientsCommand ?? (clientsCommand = new RelayCommand((e) => ViewModel = new ClientViewModel(Bank)));
+        public ICommand CloseCommand => closeCommand ?? (closeCommand = new RelayCommand((e) =>
+        {
+            SqlConnection.Close();
+            (e as MWindow).Close();
+        }));
+        public ICommand ClientsCommand => clientsCommand ?? (clientsCommand = new RelayCommand((e) => ViewModel = new ClientViewModel(Bank, SqlConnection)));
         public ICommand DepositsCommand => depositsCommand ?? (depositsCommand = new RelayCommand((e) => ViewModel = new DepositViewModel(Bank)));
         public ICommand LoansCommand => loansCommand ?? (loansCommand = new RelayCommand((e) => ViewModel = new LoanViewModel(Bank)));
         public ICommand ResetBankCommand => resetBankCommand ?? (resetBankCommand = new RelayCommand((e) => ResetBank()));
         #endregion
-        public MainViewModel() => ResetBank();
+        private readonly string[] tableNames = { "Deposits", "Loans", "Clients", "Departments" };
+        public MainViewModel(SqlConnection sqlConnection)
+        {
+            SqlConnection = sqlConnection;
+            ResetBank();
+        }
+
         private void ResetBank()
         {
+            // Очищаем все таблицы БД от данных.
+            for (int i = 0; i < tableNames.Length; i++)
+                new SqlCommand($"delete from {tableNames[i]}", SqlConnection);
+            // Создаем объекты банка.
             Bank = RandomBank.GetBank();
+            // Заполняем таблицы БД полученными полями.
+            FillDBTables();
             Log($"Создан банк {bank.Name}.");
             ViewModel = new BankNameViewModel(Bank);
         }
+
+        private void FillDBTables()
+        {
+            void PopulateDBTable(string tableName)
+            {
+                switch (tableName)
+                {
+                    case "Departments":
+                        foreach (Dep dep in bank.Deps)
+                        {
+                            new SqlCommand($"insert into {tableName} values ('{dep.ID}', '{dep.Name}')", SqlConnection).ExecuteNonQuery();
+                        }
+                        break;
+                    case "Clients":
+                        foreach (Dep dep in bank.Deps)
+                        {
+                            foreach (Client client in dep.Clients)
+                            {
+                                new SqlCommand($"insert into {tableName} values ('{client.ID}', '{client.Name}', '{client.DepID}')", SqlConnection).ExecuteNonQuery();
+                            }
+                        }
+                        break;
+                    case "Loans":
+                        foreach (Dep dep in bank.Deps)
+                        {
+                            foreach (Client client in dep.Clients)
+                            {
+                                foreach (Account account in client.Accounts)
+                                {
+                                    new SqlCommand($"insert into " + (account.Size >= 0 ? "Deposits" : "Loans") +
+                                      $" values ('{account.ID}', '{account.ClientID}', {account.Number}, {account.Size}, " +
+                                      $"{account.Rate}," + (account.Cap ? " 1" : " 0") + ")", SqlConnection).ExecuteNonQuery();
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+            for (int i = tableNames.Length - 1; i > 0; i--)
+            {
+                PopulateDBTable(tableNames[i]);
+            }
+        }
+
     }
 }

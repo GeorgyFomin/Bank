@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
         <TextBlock HorizontalAlignment="Stretch" Text="Clients" VerticalAlignment="Center" Foreground="{StaticResource textColor}" 
                    Background="{StaticResource mainBckgr}" FontSize="24"/>
-        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding Clients}" 
+        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding DataView}" 
                   AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}" RowStyle="{StaticResource RowStyle}" 
                   CellStyle="{StaticResource CellStyle}">
             <!--<ScrollBar>

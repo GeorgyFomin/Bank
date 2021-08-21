@@ -1,5 +1,7 @@
 ﻿using ClassLibrary;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -58,8 +60,18 @@ namespace WpfBank.ViewModels
         }));
         public ICommand EndClientEditCommand => endClientEditCommand ?? (endClientEditCommand = new RelayCommand(EditClient));
         #endregion
-        public ClientViewModel(Bank bank) : this() => this.bank = bank;
-        public ClientViewModel() { depDoSelected = false; }
+        public ClientViewModel(Bank bank, SqlConnection connection) : this()
+        {
+            DataTable dt = new DataTable("Clients");
+            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Clients]", Connection = connection }).Fill(dt);
+            DataView = dt.DefaultView;
+            this.bank = bank;
+        }
+        public DataView DataView { get; set; }
+        public ClientViewModel()
+        {
+            depDoSelected = false;
+        }
         private void RemoveClient(object e)
         {
             if (client != null &&

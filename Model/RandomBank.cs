@@ -13,7 +13,7 @@ namespace ClassLibrary
         /// <summary>
         /// Хранит максимально возможную доходность вклада в процентах.
         /// </summary>
-        const double MaxRate = 10;
+        const float MaxRate = 10;
         /// <summary>
         /// Хранит ссылку на генератор случайных чисел.
         /// </summary>

@@ -25,7 +25,7 @@ namespace ClassLibrary
         /// <summary>
         /// Устанавливает и возвращает доходность в процентах.
         /// </summary>
-        public double Rate { get; set; }
+        public float Rate { get; set; }
         /// <summary>
         /// Устанавливает и возвращает флаг капитализации вклада.
         /// </summary>
