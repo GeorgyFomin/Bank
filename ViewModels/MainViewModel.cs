@@ -2,6 +2,7 @@
 using FontAwesome.Sharp;
 using System;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -11,6 +12,7 @@ namespace WpfBank.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
+        private readonly string[] tableNames = { "Deposits", "Loans", "Clients", "Departments" };
         public static void Log(string report)
         {
             using (TextWriter tw = File.AppendText("log.txt"))
@@ -46,11 +48,10 @@ namespace WpfBank.ViewModels
             (e as MWindow).Close();
         }));
         public ICommand ClientsCommand => clientsCommand ?? (clientsCommand = new RelayCommand((e) => ViewModel = new ClientViewModel(Bank, SqlConnection)));
-        public ICommand DepositsCommand => depositsCommand ?? (depositsCommand = new RelayCommand((e) => ViewModel = new DepositViewModel(Bank)));
-        public ICommand LoansCommand => loansCommand ?? (loansCommand = new RelayCommand((e) => ViewModel = new LoanViewModel(Bank)));
+        public ICommand DepositsCommand => depositsCommand ?? (depositsCommand = new RelayCommand((e) => ViewModel = new DepositViewModel(Bank, SqlConnection)));
+        public ICommand LoansCommand => loansCommand ?? (loansCommand = new RelayCommand((e) => ViewModel = new LoanViewModel(Bank, SqlConnection)));
         public ICommand ResetBankCommand => resetBankCommand ?? (resetBankCommand = new RelayCommand((e) => ResetBank()));
         #endregion
-        private readonly string[] tableNames = { "Deposits", "Loans", "Clients", "Departments" };
         public MainViewModel(SqlConnection sqlConnection)
         {
             SqlConnection = sqlConnection;
@@ -99,8 +100,10 @@ namespace WpfBank.ViewModels
                                 foreach (Account account in client.Accounts)
                                 {
                                     new SqlCommand($"insert into " + (account.Size >= 0 ? "Deposits" : "Loans") +
-                                      $" values ('{account.ID}', '{account.ClientID}', {account.Number}, {account.Size}, " +
-                                      $"{account.Rate}," + (account.Cap ? " 1" : " 0") + ")", SqlConnection).ExecuteNonQuery();
+                                      $" values ('{account.ID}', '{account.ClientID}', {account.Number}, "
+                                      + account.Size.ToString(CultureInfo.InvariantCulture) + ", " +
+                                      account.Rate.ToString(CultureInfo.InvariantCulture) +
+                                      (account.Cap ? ", 1" : ", 0") + ")", SqlConnection).ExecuteNonQuery();
                                 }
                             }
                         }

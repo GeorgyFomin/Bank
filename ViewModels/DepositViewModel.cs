@@ -6,6 +6,8 @@ using System.Windows.Controls;
 using WpfBank.Dialogs;
 using System.Windows;
 using System.Linq;
+using System.Data.SqlClient;
+using System.Data;
 
 namespace WpfBank.ViewModels
 {
@@ -86,8 +88,15 @@ namespace WpfBank.ViewModels
         public ICommand DepoToSelectedCommand => depoToSelectedCommand ?? (depoToSelectedCommand = new RelayCommand(DepoToTransfer));
         public ICommand EndDepoEditCommand => endDepoEditCommand ?? (endDepoEditCommand = new RelayCommand(EditDeposit));
         public bool DepoFromSelected { get => depoFromSelected; set { depoFromSelected = value; RaisePropertyChanged(nameof(DepoFromSelected)); } }
+        public DataView DataView { get; set; }
         #endregion
-        public DepositViewModel(Bank bank) : this() => this.bank = bank;
+        public DepositViewModel(Bank bank, SqlConnection connection) : this()
+        {
+            DataTable dt = new DataTable("Deposits");
+            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Deposits]", Connection = connection }).Fill(dt);
+            DataView = dt.DefaultView;
+            this.bank = bank;
+        }
         public DepositViewModel() { depoFromSelected = transferEnabled = clientDoSelected = false; }
         private void RemoveDepo(object obj)
         {

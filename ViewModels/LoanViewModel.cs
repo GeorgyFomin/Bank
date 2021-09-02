@@ -1,5 +1,7 @@
 ﻿using ClassLibrary;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -77,8 +79,16 @@ namespace WpfBank.ViewModels
             dialog.DialogResult = true;
         }));
         public ICommand EndLoanEditCommand => endLoanEditCommand ?? (endLoanEditCommand = new RelayCommand(EditLoan));
+        public DataView DataView { get; set; }
         #endregion
-        public LoanViewModel(Bank bank) : this() => this.bank = bank;
+        public LoanViewModel(Bank bank, SqlConnection connection) : this()
+        {
+            DataTable dt = new DataTable("Loans");
+            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Loans]", Connection = connection }).Fill(dt);
+            DataView = dt.DefaultView;
+            this.bank = bank;
+        }
+
         public LoanViewModel() { }
         private void RemoveLoan(object obj)
         {

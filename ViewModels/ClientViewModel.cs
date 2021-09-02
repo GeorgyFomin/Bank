@@ -59,6 +59,7 @@ namespace WpfBank.ViewModels
             window.DialogResult = true;
         }));
         public ICommand EndClientEditCommand => endClientEditCommand ?? (endClientEditCommand = new RelayCommand(EditClient));
+        public DataView DataView { get; set; }
         #endregion
         public ClientViewModel(Bank bank, SqlConnection connection) : this()
         {
@@ -67,7 +68,6 @@ namespace WpfBank.ViewModels
             DataView = dt.DefaultView;
             this.bank = bank;
         }
-        public DataView DataView { get; set; }
         public ClientViewModel()
         {
             depDoSelected = false;
