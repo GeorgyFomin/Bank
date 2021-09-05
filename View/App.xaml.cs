@@ -11,18 +11,19 @@ namespace WpfBank
     /// </summary>
     public partial class App : Application
     {
+        public static SqlConnection SqlConnection { get; private set; }
         protected override void OnStartup(StartupEventArgs e)
         {
-            SqlConnection sqlConnection = new SqlConnection() { ConnectionString = ConfigurationManager.ConnectionStrings["bankData"].ConnectionString };
+            SqlConnection = new SqlConnection() { ConnectionString = ConfigurationManager.ConnectionStrings["bankData"].ConnectionString };
             try
             {
-                sqlConnection.Open();
+                SqlConnection.Open();
             }
             catch
             {
                 throw;
             }
-            MainViewModel mainViewModel = new MainViewModel(sqlConnection);
+            MainViewModel mainViewModel = new MainViewModel();
             MWindow mainWindow = new MWindow() { DataContext = mainViewModel };
             mainWindow.Show();
             base.OnStartup(e);

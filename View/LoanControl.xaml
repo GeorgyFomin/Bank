@@ -13,7 +13,7 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <TextBlock Text="Loans" FontSize="20"/>
-        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" Grid.Row="1"  x:Name="loanGrid" ItemsSource="{Binding DataView}" DataContext="{Binding Mode=OneWay}" 
+        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" Grid.Row="1"  x:Name="loanGrid" ItemsSource="{Binding Loans}" DataContext="{Binding Mode=OneWay}" 
                   AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}" RowStyle="{StaticResource RowStyle}" 
                   CellStyle="{StaticResource CellStyle}">
             <DataGrid.Columns>

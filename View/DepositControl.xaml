@@ -20,7 +20,7 @@
             </Button>
         </StackPanel>
         <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" Style="{StaticResource ResourceKey=BlackNavy}" x:Name="depoGrid" Grid.Row="1" 
-                  ItemsSource="{Binding DataView}" DataContext="{Binding Mode=OneWay}" AutoGenerateColumns="False" 
+                  ItemsSource="{Binding Deposits}" DataContext="{Binding Mode=OneWay}" AutoGenerateColumns="False" 
                   RowStyle="{StaticResource RowStyle}" CellStyle="{StaticResource CellStyle}">
             <DataGrid.ColumnHeaderStyle>
                 <Style BasedOn="{StaticResource ResourceKey=BlackNavy}"/>

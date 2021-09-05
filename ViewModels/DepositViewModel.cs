@@ -90,10 +90,10 @@ namespace WpfBank.ViewModels
         public bool DepoFromSelected { get => depoFromSelected; set { depoFromSelected = value; RaisePropertyChanged(nameof(DepoFromSelected)); } }
         public DataView DataView { get; set; }
         #endregion
-        public DepositViewModel(Bank bank, SqlConnection connection) : this()
+        public DepositViewModel(Bank bank) : this()
         {
             DataTable dt = new DataTable("Deposits");
-            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Deposits]", Connection = connection }).Fill(dt);
+            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Deposits]", Connection = App.SqlConnection }).Fill(dt);
             DataView = dt.DefaultView;
             this.bank = bank;
         }

@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
         <TextBlock HorizontalAlignment="Stretch" Text="Clients" VerticalAlignment="Center" Foreground="{StaticResource textColor}" 
                    Background="{StaticResource mainBckgr}" FontSize="24"/>
-        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding DataView}" 
+        <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding DataSource}" 
                   AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}" RowStyle="{StaticResource RowStyle}" 
                   CellStyle="{StaticResource CellStyle}">
             <!--<ScrollBar>
@@ -48,7 +48,7 @@
                     <i:InvokeCommandAction Command="{Binding SelCommand}" CommandParameter="{Binding ElementName=clientsGrid}"/>
                 </i:EventTrigger>
                 <i:EventTrigger EventName="MouseRightButtonDown">
-                    <i:InvokeCommandAction Command="{Binding RemoveClientCommand}"/>
+                    <i:InvokeCommandAction Command="{Binding RemoveClientCommand}" CommandParameter="{Binding ElementName=clientsGrid}"/>
                 </i:EventTrigger>
                 <i:EventTrigger EventName="CellEditEnding">
                     <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />

@@ -1,6 +1,7 @@
 ﻿using ClassLibrary;
 using FontAwesome.Sharp;
 using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
@@ -12,7 +13,7 @@ namespace WpfBank.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private readonly string[] tableNames = { "Deposits", "Loans", "Clients", "Departments" };
+        public static readonly string[] tableNames = { "Deposits", "Loans", "Clients", "Departments" };
         public static void Log(string report)
         {
             using (TextWriter tw = File.AppendText("log.txt"))
@@ -44,17 +45,16 @@ namespace WpfBank.ViewModels
         }));
         public ICommand CloseCommand => closeCommand ?? (closeCommand = new RelayCommand((e) =>
         {
-            SqlConnection.Close();
+            App.SqlConnection.Close();
             (e as MWindow).Close();
         }));
-        public ICommand ClientsCommand => clientsCommand ?? (clientsCommand = new RelayCommand((e) => ViewModel = new ClientViewModel(Bank, SqlConnection)));
-        public ICommand DepositsCommand => depositsCommand ?? (depositsCommand = new RelayCommand((e) => ViewModel = new DepositViewModel(Bank, SqlConnection)));
-        public ICommand LoansCommand => loansCommand ?? (loansCommand = new RelayCommand((e) => ViewModel = new LoanViewModel(Bank, SqlConnection)));
+        public ICommand ClientsCommand => clientsCommand ?? (clientsCommand = new RelayCommand((e) => ViewModel = new ClientViewModel(Bank)));
+        public ICommand DepositsCommand => depositsCommand ?? (depositsCommand = new RelayCommand((e) => ViewModel = new DepositViewModel(Bank)));
+        public ICommand LoansCommand => loansCommand ?? (loansCommand = new RelayCommand((e) => ViewModel = new LoanViewModel(Bank)));
         public ICommand ResetBankCommand => resetBankCommand ?? (resetBankCommand = new RelayCommand((e) => ResetBank()));
         #endregion
-        public MainViewModel(SqlConnection sqlConnection)
+        public MainViewModel()
         {
-            SqlConnection = sqlConnection;
             ResetBank();
         }
 
@@ -62,7 +62,7 @@ namespace WpfBank.ViewModels
         {
             // Очищаем все таблицы БД от данных.
             for (int i = 0; i < tableNames.Length; i++)
-                new SqlCommand($"delete from {tableNames[i]}", SqlConnection);
+                new SqlCommand($"delete from {tableNames[i]}", App.SqlConnection).ExecuteNonQuery();
             // Создаем объекты банка.
             Bank = RandomBank.GetBank();
             // Заполняем таблицы БД полученными полями.
@@ -80,7 +80,7 @@ namespace WpfBank.ViewModels
                     case "Departments":
                         foreach (Dep dep in bank.Deps)
                         {
-                            new SqlCommand($"insert into {tableName} values ('{dep.ID}', '{dep.Name}')", SqlConnection).ExecuteNonQuery();
+                            new SqlCommand($"insert into {tableName} values ('{dep.ID}', '{dep.Name}')", App.SqlConnection).ExecuteNonQuery();
                         }
                         break;
                     case "Clients":
@@ -88,7 +88,7 @@ namespace WpfBank.ViewModels
                         {
                             foreach (Client client in dep.Clients)
                             {
-                                new SqlCommand($"insert into {tableName} values ('{client.ID}', '{client.Name}', '{client.DepID}')", SqlConnection).ExecuteNonQuery();
+                                new SqlCommand($"insert into {tableName} values ('{client.ID}', '{client.Name}', '{client.DepID}')", App.SqlConnection).ExecuteNonQuery();
                             }
                         }
                         break;
@@ -103,7 +103,7 @@ namespace WpfBank.ViewModels
                                       $" values ('{account.ID}', '{account.ClientID}', {account.Number}, "
                                       + account.Size.ToString(CultureInfo.InvariantCulture) + ", " +
                                       account.Rate.ToString(CultureInfo.InvariantCulture) +
-                                      (account.Cap ? ", 1" : ", 0") + ")", SqlConnection).ExecuteNonQuery();
+                                      (account.Cap ? ", 1" : ", 0") + ")", App.SqlConnection).ExecuteNonQuery();
                                 }
                             }
                         }

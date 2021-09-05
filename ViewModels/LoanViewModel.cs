@@ -81,10 +81,10 @@ namespace WpfBank.ViewModels
         public ICommand EndLoanEditCommand => endLoanEditCommand ?? (endLoanEditCommand = new RelayCommand(EditLoan));
         public DataView DataView { get; set; }
         #endregion
-        public LoanViewModel(Bank bank, SqlConnection connection) : this()
+        public LoanViewModel(Bank bank) : this()
         {
             DataTable dt = new DataTable("Loans");
-            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Loans]", Connection = connection }).Fill(dt);
+            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Loans]", Connection = App.SqlConnection }).Fill(dt);
             DataView = dt.DefaultView;
             this.bank = bank;
         }
