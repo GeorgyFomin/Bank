@@ -140,7 +140,7 @@
                     <GradientStop Color="#FF120F46" Offset="1"/>
                 </LinearGradientBrush>
             </StackPanel.Background>
-            <Button Width="70" Height="60" Background="#293a4c">
+            <Button Width="70" Height="60" Background="#293a4c" Command="{Binding DBModeCommand}" ToolTip="{Binding ToolTipText}">
                 <Button.Content>
                     <StackPanel>
                         <fa:IconBlock Width="35" Height="35" Padding="0 8 0 0" Icon="Bars" Foreground="#8393a3" FontSize="18"/>
@@ -148,11 +148,6 @@
                 </Button.Content>
             </Button>
             <Button Width="70" Height="60" Background="#293a4c" Command="{Binding ClientsCommand}">
-                <!--<i:Interaction.Triggers>
-                    <i:EventTrigger EventName="Click">
-                        <i:InvokeCommandAction Command="{Binding ClientsCommand}" CommandParameter="{Binding ElementName=mWindow}"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>-->
                 <Button.Content>
                     <StackPanel>
                         <fa:IconBlock Width="35" Height="35" Padding="0 2 0 0" Icon="PeopleArrows" Foreground="#8393a3" FontSize="22"/>
@@ -161,11 +156,6 @@
                 </Button.Content>
             </Button>
             <Button Width="70" Height="60" Background="#293a4c" Command="{Binding DepositsCommand}">
-                <!--<i:Interaction.Triggers>
-                    <i:EventTrigger EventName="Click">
-                        <i:InvokeCommandAction Command="{Binding DepositsCommand}" CommandParameter="{Binding ElementName=mWindow}"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>-->
                 <Button.Content>
                     <StackPanel>
                         <fa:IconBlock Width="35" Height="35" Padding="0 2 0 0" Icon="MoneyCheck" Foreground="#8393a3" FontSize="22"/>
@@ -174,11 +164,6 @@
                 </Button.Content>
             </Button>
             <Button Width="70" Height="60" Background="#293a4c" Command="{Binding LoansCommand}" >
-                <!--<i:Interaction.Triggers>
-                    <i:EventTrigger EventName="Click">
-                        <i:InvokeCommandAction Command="{Binding LoansCommand}" CommandParameter="{Binding ElementName=mWindow}"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>-->
                 <Button.Content>
                     <StackPanel>
                         <fa:IconBlock Width="35" Height="35" Padding="0 2 0 0" Icon="MoneyBillAlt" Foreground="#8393a3" FontSize="25"/>

@@ -13,10 +13,6 @@ namespace WpfBank.ViewModels
 {
     public class ClientViewModel : ViewModelBase
     {
-        /// <summary>
-        /// Хранит режим источника данных - база данных (true) или локальная коллекция Clients (false).
-        /// </summary>
-        private const bool dbMode = true;
         #region Fields
         private readonly Bank bank;
         private Client client;
@@ -102,10 +98,11 @@ namespace WpfBank.ViewModels
         public ICommand SelCommand => selCommand ?? (selCommand =
             new RelayCommand((e) =>
             {
-                if (dbMode)
+                if (MainViewModel.DBMode)
                 {
                     if ((DataRowView = (e as DataGrid).SelectedItem is DataRowView rowView ? rowView : null) != null)
-                        Client = Clients.First((g) => dataRowView.Row.Field<Guid>("Id") == g.ID);
+                        Client = DataRowView.Row.RowState == DataRowState.Detached ? new Client() :
+                        Clients.First((g) => dataRowView.Row.Field<Guid>("Id") == g.ID);
                     return;
                 }
                 Client = (e as DataGrid).SelectedItem is Client client ? client : null;
@@ -121,7 +118,6 @@ namespace WpfBank.ViewModels
             window.DialogResult = true;
         }));
         public ICommand EndClientEditCommand => endClientEditCommand ?? (endClientEditCommand = new RelayCommand(EditClient));
-
         public DataView DataView { get => dataView; set { dataView = value; RaisePropertyChanged(nameof(DataView)); } }
         public object DataSource { get; set; }
         public DataRowView DataRowView { get => dataRowView; set { dataRowView = value; RaisePropertyChanged(nameof(DataRowView)); } }
@@ -140,7 +136,7 @@ namespace WpfBank.ViewModels
 
             DataView = clientsTable.DefaultView;
             this.bank = bank;
-            if (dbMode)
+            if (MainViewModel.DBMode)
                 DataSource = DataView;
             else
                 DataSource = Clients;
@@ -162,18 +158,15 @@ namespace WpfBank.ViewModels
                 RaisePropertyChanged(nameof(Loans));
                 _ = bank.Deps.First((g) => client.DepID == g.ID).Clients.Remove(client);
                 RaisePropertyChanged(nameof(Clients));
-                if (dbMode)
+                if (MainViewModel.DBMode)
                 {
-                    //adapter.DeleteCommand =
                     new SqlCommand($"delete from {depositsTable} where '{dataRowView.Row.Field<Guid>("Id")}' = ClientId ", App.SqlConnection).ExecuteNonQuery();
                     adapter.Update(depositsTable);
-                    //adapter.DeleteCommand = 
                     new SqlCommand($"delete from {loansTable} where '{dataRowView.Row.Field<Guid>("Id")}' = ClientId ", App.SqlConnection).ExecuteNonQuery();
                     adapter.Update(loansTable);
                     adapter.DeleteCommand = new SqlCommand($"delete from {clientsTable} where '{dataRowView.Row.Field<Guid>("Id")}' = Id ", App.SqlConnection);
-                    adapter.Update(clientsTable);
                     dataRowView.Delete();
-                    //DataView = clientsTable.DefaultView;
+                    adapter.Update(clientsTable);
                 }
                 else
                     (e as DataGrid).ItemsSource = Clients;
@@ -181,24 +174,48 @@ namespace WpfBank.ViewModels
                 Client = null;
             }
         }
-        private void EditClient(object commandParameter)
+        private void EditClient(object e)
         {
             if (client == null)
                 return;
             if (client.DepID != default)
             {
+                if (MainViewModel.DBMode)
+                {
+                    new SqlCommand($"update {clientsTable} set Name = '{client.Name}', DepId = '{client.DepID}' where Id = '{client.ID}'", App.SqlConnection)
+                    .ExecuteNonQuery();
+                    (e as DataGrid).ItemsSource = DataView;
+                    RaisePropertyChanged(nameof(DataRowView));
+                }
                 MainViewModel.Log($"Имя клиента {Client} отредактировано.");
                 return;
             }
             if ((bool)new DepsDialog { DataContext = this }.ShowDialog() && Dep != null)
-                AddClientTo(Dep);
+                AddClientTo(e, Dep);
         }
-        private void AddClientTo(Dep dep)
+        private void AddClientTo(object e, Dep dep)
         {
             client.DepID = dep.ID;
             dep.Clients.Add(client);
+            if (MainViewModel.DBMode)
+            {
+                new SqlCommand($"insert into {clientsTable} values ('{client.ID}', '{client.Name}', '{client.DepID}')", App.SqlConnection).ExecuteNonQuery();
+                (e as DataGrid).ItemsSource = DataView;
+                RaisePropertyChanged(nameof(DataRowView));
+            }
             RaisePropertyChanged(nameof(Client));
             MainViewModel.Log($"В отдел {dep} добавлен клиент {client}.");
         }
+
+        //private RelayCommand cellChangedCommand;
+        //public ICommand CellChangedCommand => cellChangedCommand ?? (cellChangedCommand = new RelayCommand(CellChanged));
+        //private void CellChanged(object e)
+        //{
+        //    //if (DataRowView == null)
+        //    //    return;
+        //    //DataRowView.EndEdit();
+        //    //adapter.Update(clientsTable);
+        //    //(e as DataGrid).ItemsSource = DataView;
+        //}
     }
 }

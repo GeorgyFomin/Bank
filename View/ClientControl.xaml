@@ -53,6 +53,9 @@
                 <i:EventTrigger EventName="CellEditEnding">
                     <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
                 </i:EventTrigger>
+                <!--<i:EventTrigger EventName="CurrentCellChanged">
+                    <i:InvokeCommandAction Command="{Binding CellChangedCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
+                </i:EventTrigger>-->
             </i:Interaction.Triggers>
         </DataGrid>
         <!--<ListView x:Name="clientsListView" ItemContainerStyle="{DynamicResource ListViewItemStyle1}" Style="{StaticResource listViewStyle}" 

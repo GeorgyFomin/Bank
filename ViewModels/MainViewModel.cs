@@ -1,10 +1,12 @@
 ﻿using ClassLibrary;
 using FontAwesome.Sharp;
 using System;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using WpfBank.Commands;
@@ -116,5 +118,14 @@ namespace WpfBank.ViewModels
             }
         }
 
+        private RelayCommand dBModeCommand;
+        private string toolTipText = "Режим " + (DBMode ? "базы данных" : "коллекций");
+        public string ToolTipText { get => toolTipText; set { toolTipText = value; RaisePropertyChanged(nameof(ToolTipText)); } }
+        public ICommand DBModeCommand => dBModeCommand ?? (dBModeCommand = new RelayCommand((e) =>
+        {
+            DBMode = !DBMode;
+            ToolTipText = "Режим " + (DBMode ? "базы данных" : "коллекций");
+        }));
+        public static bool DBMode { get; private set; }
     }
 }
