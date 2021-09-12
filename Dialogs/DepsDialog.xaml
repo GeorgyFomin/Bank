@@ -14,13 +14,16 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <Button Style="{StaticResource headerBtn}" Content="Ok" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Command="{Binding OKCommand}" 
-                IsEnabled="{Binding DepDoSelected}" CommandParameter="{Binding ElementName=depsDialog}" IsDefault="True" FontSize="20"/>
+                CommandParameter="{Binding ElementName=depsDialog}" IsDefault="True" FontSize="20"/>
         <TextBlock Grid.Row="1" Text="Dep Name" FontSize="20"/>
         <ListBox Style="{StaticResource ResourceKey=BlackNavy}" Grid.Row="2" x:Name="depListBox" HorizontalAlignment="Left" Height="Auto" VerticalAlignment="Top" Width="100" 
                   ItemsSource="{Binding Deps}" FontSize="20" DisplayMemberPath="Name">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="SelectionChanged">
                     <i:InvokeCommandAction Command="{Binding DepSelectedCommand}" CommandParameter="{Binding ElementName=depListBox}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="Loaded">
+                    <i:InvokeCommandAction Command="{Binding DepSelDefaultCommand}" CommandParameter="{Binding ElementName=depListBox}"/>
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </ListBox>

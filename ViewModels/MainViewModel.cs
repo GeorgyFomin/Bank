@@ -47,7 +47,6 @@ namespace WpfBank.ViewModels
         }));
         public ICommand CloseCommand => closeCommand ?? (closeCommand = new RelayCommand((e) =>
         {
-            App.SqlConnection.Close();
             (e as MWindow).Close();
         }));
         public ICommand ClientsCommand => clientsCommand ?? (clientsCommand = new RelayCommand((e) => ViewModel = new ClientViewModel(Bank)));
@@ -59,21 +58,28 @@ namespace WpfBank.ViewModels
         {
             ResetBank();
         }
-
         private void ResetBank()
         {
-            // Очищаем все таблицы БД от данных.
-            for (int i = 0; i < tableNames.Length; i++)
-                new SqlCommand($"delete from {tableNames[i]}", App.SqlConnection).ExecuteNonQuery();
-            // Создаем объекты банка.
-            Bank = RandomBank.GetBank();
-            // Заполняем таблицы БД полученными полями.
-            FillDBTables();
+            // Очищаем все таблицы БД от данных, создаем случайные данные и заполняем ими таблицы.
+            using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
+                try
+                {
+                    connection.Open();
+                    for (int i = 0; i < tableNames.Length; i++)
+                        new SqlCommand($"delete from {tableNames[i]}", connection).ExecuteNonQuery();
+                    // Создаем объекты банка.
+                    Bank = RandomBank.GetBank();
+                    // Заполняем таблицы БД полученными полями.
+                    FillDBTables(connection);
+                }
+                catch
+                {
+                    throw;
+                }
             Log($"Создан банк {bank.Name}.");
             ViewModel = new BankNameViewModel(Bank);
         }
-
-        private void FillDBTables()
+        private void FillDBTables(SqlConnection connection)
         {
             void PopulateDBTable(string tableName)
             {
@@ -82,7 +88,7 @@ namespace WpfBank.ViewModels
                     case "Departments":
                         foreach (Dep dep in bank.Deps)
                         {
-                            new SqlCommand($"insert into {tableName} values ('{dep.ID}', '{dep.Name}')", App.SqlConnection).ExecuteNonQuery();
+                            new SqlCommand($"insert into {tableName} values ('{dep.ID}', '{dep.Name}')", connection).ExecuteNonQuery();
                         }
                         break;
                     case "Clients":
@@ -90,7 +96,7 @@ namespace WpfBank.ViewModels
                         {
                             foreach (Client client in dep.Clients)
                             {
-                                new SqlCommand($"insert into {tableName} values ('{client.ID}', '{client.Name}', '{client.DepID}')", App.SqlConnection).ExecuteNonQuery();
+                                new SqlCommand($"insert into {tableName} values ('{client.ID}', '{client.Name}', '{client.DepID}')", connection).ExecuteNonQuery();
                             }
                         }
                         break;
@@ -105,7 +111,7 @@ namespace WpfBank.ViewModels
                                       $" values ('{account.ID}', '{account.ClientID}', {account.Number}, "
                                       + account.Size.ToString(CultureInfo.InvariantCulture) + ", " +
                                       account.Rate.ToString(CultureInfo.InvariantCulture) +
-                                      (account.Cap ? ", 1" : ", 0") + ")", App.SqlConnection).ExecuteNonQuery();
+                                      (account.Cap ? ", 1" : ", 0") + ")", connection).ExecuteNonQuery();
                                 }
                             }
                         }
@@ -117,7 +123,6 @@ namespace WpfBank.ViewModels
                 PopulateDBTable(tableNames[i]);
             }
         }
-
         private RelayCommand dBModeCommand;
         private string toolTipText = "Режим " + (DBMode ? "базы данных" : "коллекций");
         public string ToolTipText { get => toolTipText; set { toolTipText = value; RaisePropertyChanged(nameof(ToolTipText)); } }
@@ -126,6 +131,6 @@ namespace WpfBank.ViewModels
             DBMode = !DBMode;
             ToolTipText = "Режим " + (DBMode ? "базы данных" : "коллекций");
         }));
-        public static bool DBMode { get; private set; }
+        public static bool DBMode { get; private set; } = true;
     }
 }

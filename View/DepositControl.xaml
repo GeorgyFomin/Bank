@@ -20,7 +20,7 @@
             </Button>
         </StackPanel>
         <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" Style="{StaticResource ResourceKey=BlackNavy}" x:Name="depoGrid" Grid.Row="1" 
-                  ItemsSource="{Binding Deposits}" DataContext="{Binding Mode=OneWay}" AutoGenerateColumns="False" 
+                  ItemsSource="{Binding DataSource}" DataContext="{Binding Mode=OneWay}" AutoGenerateColumns="False" 
                   RowStyle="{StaticResource RowStyle}" CellStyle="{StaticResource CellStyle}">
             <DataGrid.ColumnHeaderStyle>
                 <Style BasedOn="{StaticResource ResourceKey=BlackNavy}"/>
@@ -30,13 +30,15 @@
                 <DataGridTextColumn Header="Size" Binding="{Binding Size}" EditingElementStyle="{StaticResource EditingCellTextBox}"/>
                 <DataGridTextColumn Header="Rate" Binding="{Binding Rate}" EditingElementStyle="{StaticResource EditingCellTextBox}"/>
                 <DataGridCheckBoxColumn Header="Cap" Binding="{Binding Cap}">
-                    <DataGridCheckBoxColumn.ElementStyle>
+                    <!--<DataGridCheckBoxColumn.ElementStyle>
                         <Style TargetType="CheckBox">
                             <Style.Setters>
                                 <Setter Property="IsChecked" 
                                         Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content.IsChecked}" />
-                                <!--<Setter Property="SnapsToDevicePixels" Value="true" />-->
-                                <!--<Setter Property="OverridesDefaultStyle" Value="true" />-->
+                                -->
+                    <!--<Setter Property="SnapsToDevicePixels" Value="true" />
+                    <Setter Property="OverridesDefaultStyle" Value="true" />-->
+                    <!--
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="{x:Type CheckBox}">
@@ -77,7 +79,7 @@
                                 </Setter>
                             </Style.Setters>
                         </Style>
-                    </DataGridCheckBoxColumn.ElementStyle>
+                    </DataGridCheckBoxColumn.ElementStyle>-->
                 </DataGridCheckBoxColumn>
             </DataGrid.Columns>
             <i:Interaction.Triggers>
@@ -85,10 +87,13 @@
                     <i:InvokeCommandAction Command="{Binding SelCommand}" CommandParameter="{Binding ElementName=depoGrid}"/>
                 </i:EventTrigger>
                 <i:EventTrigger EventName="MouseRightButtonDown">
-                    <i:InvokeCommandAction Command="{Binding RemoveDepoCommand}"/>
+                    <i:InvokeCommandAction Command="{Binding RemoveDepoCommand}" CommandParameter="{Binding ElementName=depoGrid}"/>
                 </i:EventTrigger>
                 <i:EventTrigger EventName="CellEditEnding">
-                    <i:InvokeCommandAction Command="{Binding EndDepoEditCommand}" />
+                    <i:InvokeCommandAction Command="{Binding EndDepoEditCommand}" CommandParameter="{Binding ElementName=depoGrid}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="CurrentCellChanged">
+                    <i:InvokeCommandAction Command="{Binding CellChangedCommand}" CommandParameter="{Binding ElementName=depoGrid}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </DataGrid>

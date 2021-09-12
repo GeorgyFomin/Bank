@@ -8,6 +8,9 @@ using System.Windows;
 using System.Linq;
 using System.Data.SqlClient;
 using System.Data;
+using System.Windows.Data;
+using System;
+using System.Globalization;
 
 namespace WpfBank.ViewModels
 {
@@ -25,11 +28,17 @@ namespace WpfBank.ViewModels
         private RelayCommand depoToSelectedCommand;
         private RelayCommand oKDepoToCommand;
         private RelayCommand endDepoEditCommand;
+        private RelayCommand cellChangedCommand;
         private bool clientDoSelected;
         private bool transferEnabled;
         private Account depoTo;
         private decimal transferAmount;
         private bool depoFromSelected;
+        private DataTable depositsTable, loansTable;
+        private SqlDataAdapter adapter;
+        private DataView dataView;
+        private DataRowView dataRowView;
+        private bool? added = null;
         #endregion
         #region Properties
         /// <summary>
@@ -72,10 +81,44 @@ namespace WpfBank.ViewModels
                 return clients;
             }
         }
+        /// <summary>
+        /// Возвращает список всех кредитов банка.
+        /// </summary>
+        public ObservableCollection<Account> Loans
+        {
+            get
+            {
+                ObservableCollection<Account> loans = new ObservableCollection<Account>();
+                foreach (Dep dep in bank.Deps)
+                {
+                    foreach (Client client in dep.Clients)
+                    {
+                        foreach (Account account in client.Accounts)
+                        {
+                            if (account.Size <= 0)
+                                loans.Add(account);
+                        }
+                    }
+                }
+                return loans;
+            }
+        }
         public Account Depo { get => depo; set { depo = value; RaisePropertyChanged(nameof(Depo)); } }
         public Client Client { get => client; set { client = value; RaisePropertyChanged(nameof(Client)); } }
         public ICommand SelCommand => selCommand ?? (selCommand =
-            new RelayCommand((e) => DepoFromSelected = (Depo = (e as DataGrid).SelectedItem is Account depo ? depo : null) != null));
+            new RelayCommand((e) =>
+            {
+                // Получаем ссылку строку, выбранную в DataGrid.
+                object selItem = (e as DataGrid).SelectedItem;
+                // Фильтруем ссылку.
+                if (selItem == null || selItem.ToString() == "{NewItemPlaceholder}")
+                    return;
+                // Определяем текущую строку DataRowView в режиме DBMode и текущий клиента Deposit в любом режиме.
+                Depo = MainViewModel.DBMode ?
+                (DataRowView = (DataRowView)selItem).IsNew ? new Account() : Deposits.First((g) => DataRowView.Row.Field<Guid>("Id") == g.ID) :
+                (Account)selItem;
+                DepoFromSelected = true;
+            }));
         public ICommand RemoveDepoCommand => removeDepoCommand ?? (removeDepoCommand = new RelayCommand(RemoveDepo));
         public ICommand TransferCommand => transferCommand ?? (transferCommand = new RelayCommand(Transfer));
         public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
@@ -87,26 +130,60 @@ namespace WpfBank.ViewModels
         public ICommand OKDepoToCommand => oKDepoToCommand ?? (oKDepoToCommand = new RelayCommand((e) => (e as TransferDialog).DialogResult = true));
         public ICommand DepoToSelectedCommand => depoToSelectedCommand ?? (depoToSelectedCommand = new RelayCommand(DepoToTransfer));
         public ICommand EndDepoEditCommand => endDepoEditCommand ?? (endDepoEditCommand = new RelayCommand(EditDeposit));
+        public ICommand CellChangedCommand => cellChangedCommand ?? (cellChangedCommand = new RelayCommand(CellChanged));
         public bool DepoFromSelected { get => depoFromSelected; set { depoFromSelected = value; RaisePropertyChanged(nameof(DepoFromSelected)); } }
-        public DataView DataView { get; set; }
+        public DataView DataView { get => dataView; set { dataView = value; RaisePropertyChanged(nameof(DataView)); } }
+        public object DataSource { get; set; }
+        public DataRowView DataRowView { get => dataRowView; set { dataRowView = value; RaisePropertyChanged(nameof(DataRowView)); } }
         #endregion
         public DepositViewModel(Bank bank) : this()
         {
-            DataTable dt = new DataTable("Deposits");
-            new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Deposits]", Connection = App.SqlConnection }).Fill(dt);
-            DataView = dt.DefaultView;
+            using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
+                try
+                {
+                    connection.Open();
+                    adapter = new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Deposits]", Connection = connection });
+                    depositsTable = new DataTable("Deposits");
+                    adapter.Fill(depositsTable);
+                    loansTable = new DataTable("Loans");
+                    adapter.SelectCommand = new SqlCommand() { CommandText = "select * from [Loans]", Connection = connection };
+                    adapter.Fill(loansTable);
+                }
+                catch
+                {
+                    throw;
+                }
+            DataView = depositsTable.DefaultView;
             this.bank = bank;
+            if (MainViewModel.DBMode)
+                DataSource = DataView;
+            else
+                DataSource = Deposits;
         }
         public DepositViewModel() { depoFromSelected = transferEnabled = clientDoSelected = false; }
         private void RemoveDepo(object obj)
         {
-            if (depo != null &&
-                MessageBox.Show($"Удалить депозит №{depo.Number}?", $"Удаление депозита №{depo.Number}", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
-                _ = Clients.First((g) => depo.ClientID == g.ID).Accounts.Remove(depo);
-                RaisePropertyChanged(nameof(Deposits));
-                MainViewModel.Log($"Удален депозит №{depo.Number}");
-            }
+            if (depo == null || MessageBox.Show($"Удалить депозит №{depo.Number}?", $"Удаление депозита №{depo.Number}", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                return;
+            Clients.First((g) => depo.ClientID == g.ID).Accounts.Remove(depo);
+            RaisePropertyChanged(nameof(Deposits));
+            MainViewModel.Log($"Удален депозит №{depo.Number}");
+            if (MainViewModel.DBMode)
+                using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
+                    try
+                    {
+                        connection.Open();
+                        adapter.DeleteCommand = new SqlCommand($"delete from {depositsTable} where '{dataRowView.Row.Field<int>("Number")}' = Number", connection);
+                        dataRowView.Delete();
+                        adapter.Update(depositsTable);
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+            else
+                (obj as DataGrid).ItemsSource = Deposits;
+            Depo = null;
         }
         private void Transfer(object obj)
         {
@@ -150,17 +227,87 @@ namespace WpfBank.ViewModels
         private void EditDeposit(object e)
         {
             if (depo.ClientID != default)
-                MainViewModel.Log($"Поля депозита №{depo.Number} отредактированы.");
+            {
+                added = false;
+                MainViewModel.Log($"Поля депозита №{depo.Number} будут отредактированы.");
+            }
             else
-                if ((bool)new ClientsDialog { DataContext = this }.ShowDialog() && client != null)
-                AddDepoTo();
+            {
+                bool flag;
+                do
+                {
+                    if (flag = (bool)new ClientsDialog { DataContext = this }.ShowDialog() && client != null)
+                        AddDepoTo();
+                } while (!flag);
+            }
         }
         private void AddDepoTo()
         {
             depo.ClientID = client.ID;
             client.Accounts.Add(depo);
             RaisePropertyChanged(nameof(Depo));
-            MainViewModel.Log($"Клиенту {client} открыт депозит {depo}.");
+            MainViewModel.Log($"Клиенту {client} будет открыт депозит {depo}.");
+            added = true;
+        }
+        private void DBChanged(object e)
+        {
+            void SetNewRowView(Account depo)
+            {
+                int lastRowIndex = depositsTable.Rows.Count - 1;
+                depositsTable.Rows[lastRowIndex][0] = depo.ID;
+                depositsTable.Rows[lastRowIndex][1] = depo.ClientID;
+                depositsTable.Rows[lastRowIndex][2] = depo.Number;
+                depositsTable.Rows[lastRowIndex][3] = depo.Size;
+                depositsTable.Rows[lastRowIndex][4] = depo.Rate;
+                depositsTable.Rows[lastRowIndex][5] = depo.Cap;
+                depositsTable.AcceptChanges();
+                DataSource = DataView = depositsTable.DefaultView;
+            }
+            // Определяем имя поля, с которым связан текущий столбец, ячейка которого изменена.
+            string columnName = ((e as DataGrid).CurrentColumn.ClipboardContentBinding as Binding).Path.Path;
+            // Свойству columnName объекта класса Client присваиваем значение, кторое возвращает
+            // расширяющий обобщенный метод dataRowView.Row.Field<T>(columnName).
+            // Тип T является типом поля столбца columnName, т.е. dataRowView.Row.Table.Columns[columnName].DataType.
+            typeof(Account).GetProperty(columnName).SetValue(Depo,
+                // Вызываем метод dataRowView.Row.Field<T>(columnName), где тип T есть dataRowView.Row.Table.Columns[columnName].DataType
+                // Для этого получаем MethodInfo метода Field,
+                typeof(DataRowExtensions).GetMethod("Field", new Type[] { typeof(DataRow), typeof(string) }).
+                // создаем статический метод Field<T> класса DataRowExtension, где тип T есть dataRowView.Row.Table.Columns[columnName].DataType,
+                // и вызываем его над объектом dataRowView.Row с параметром columnName
+                MakeGenericMethod(dataRowView.Row.Table.Columns[columnName].DataType).Invoke(null, new object[] { dataRowView.Row, columnName }));
+            using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
+                try
+                {
+                    connection.Open();
+                    if (!added.Value)
+                    {
+                        new SqlCommand($"update {depositsTable} set Size = " + depo.Size.ToString(CultureInfo.InvariantCulture) +
+                            ", Rate = " + depo.Rate.ToString(CultureInfo.InvariantCulture) + ", Cap = " + (depo.Cap ? "1" : "0") +
+                            $"where Id = '{depo.ID}'", connection).ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        SetNewRowView(depo);
+                        new SqlCommand($"insert into {depositsTable} values ('{depo.ID}', '{depo.ClientID}', {depo.Number}, " +
+                        depo.Size.ToString(CultureInfo.InvariantCulture) + ", " + depo.Rate.ToString(CultureInfo.InvariantCulture) + (depo.Cap ? ", 1" : ", 0") + ")",
+                        connection).ExecuteNonQuery();
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+        }
+        private void CellChanged(object e)
+        {
+            if (added == null)
+                return;
+            if (MainViewModel.DBMode)
+                DBChanged(e);
+            string comment = added.Value ? $"Клиенту {client} открыт депозит {depo}" : $"Поля депозита №{depo.Number} отредактированы.";
+            MainViewModel.Log(comment);
+            MessageBox.Show(comment);
+            added = null;
         }
     }
 }

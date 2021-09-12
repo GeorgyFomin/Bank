@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:WpfBank.Dialogs"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors" xmlns:viewmodels="clr-namespace:WpfBank.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:DepositViewModel}"
         mc:Ignorable="d"
-        Title="Выбор клиента" Height="358.621" Width="293.966" WindowStartupLocation="CenterScreen" Style="{StaticResource BlackNavy}">
+        Title="Выбор клиента" Height="358.621" Width="293.966" WindowStartupLocation="CenterScreen" Style="{StaticResource BlackNavy}" WindowStyle="None">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -14,8 +14,8 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <Button Style="{StaticResource headerBtn}" Content="Ok" HorizontalAlignment="Left" VerticalAlignment="Top" Width="110" Command="{Binding OKCommand}" 
-                IsEnabled="{Binding ClientDoSelected}" CommandParameter="{Binding ElementName=clientsDialog}" IsDefault="True" FontSize="20"/>
-        <TextBlock Grid.Row="1" Text="Client Name" FontSize="20"/>
+                IsEnabled="{Binding ClientDoSelected}" CommandParameter="{Binding ElementName=clientsDialog}" IsDefault="True" FontSize="20" />
+        <TextBlock Grid.Row="1" Text="Select Client Name" FontSize="20"/>
         <ListBox Style="{StaticResource ResourceKey=BlackNavy}" Grid.Row="2" x:Name="clientListBox" HorizontalAlignment="Left" Height="Auto" 
                  VerticalAlignment="Stretch" Width="110" ItemsSource="{Binding Clients}" FontSize="20" DisplayMemberPath="Name" >
             <i:Interaction.Triggers>

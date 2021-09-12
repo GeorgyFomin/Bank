@@ -18,25 +18,6 @@
         <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" x:Name="clientsGrid" Grid.Row="1" ItemsSource="{Binding DataSource}" 
                   AutoGenerateColumns="False" Style="{StaticResource ResourceKey=BlackNavy}" RowStyle="{StaticResource RowStyle}" 
                   CellStyle="{StaticResource CellStyle}">
-            <!--<ScrollBar>
-                <ScrollBar.Style>
-                    <Style TargetType="{x:Type ScrollBar}">
-                        <Style.Triggers>
-                            <Trigger Property="Orientation" Value="Horizontal">
-                                <Setter Property="Width" Value="Auto" />
-                                <Setter Property="Height" Value="18" />
-                                <Setter Property="Template" Value="{StaticResource HorizontalScrollBar}" />
-                            </Trigger>
-                            <Trigger Property="Orientation" Value="Vertical">
-                                <Setter Property="Width" Value="18" />
-                                <Setter Property="Height" Value="Auto" />
-                                <Setter Property="Template" Value="{StaticResource VerticalScrollBar}" />
-                            </Trigger>
-                        </Style.Triggers>
-
-                    </Style>
-                </ScrollBar.Style>
-            </ScrollBar>-->
             <DataGrid.ColumnHeaderStyle>
                 <Style BasedOn="{StaticResource ResourceKey=BlackNavy}"/>
             </DataGrid.ColumnHeaderStyle>
@@ -53,9 +34,12 @@
                 <i:EventTrigger EventName="CellEditEnding">
                     <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
                 </i:EventTrigger>
-                <!--<i:EventTrigger EventName="CurrentCellChanged">
-                    <i:InvokeCommandAction Command="{Binding CellChangedCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
+                <!--<i:EventTrigger EventName="RowEditEnding">
+                    <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
                 </i:EventTrigger>-->
+                <i:EventTrigger EventName="CurrentCellChanged">
+                    <i:InvokeCommandAction Command="{Binding CellChangedCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
+                </i:EventTrigger>
             </i:Interaction.Triggers>
         </DataGrid>
         <!--<ListView x:Name="clientsListView" ItemContainerStyle="{DynamicResource ListViewItemStyle1}" Style="{StaticResource listViewStyle}" 
