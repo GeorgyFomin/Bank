@@ -31,6 +31,7 @@ namespace WpfBank.ViewModels
         private RelayCommand oKDepoToCommand;
         private RelayCommand endDepoEditCommand;
         private RelayCommand cellChangedCommand;
+        private RelayCommand transfAmountChangedCommand;
         private bool clientDoSelected;
         private bool transferEnabled;
         private bool transferOKEnabled;
@@ -102,6 +103,7 @@ namespace WpfBank.ViewModels
             }));
         public ICommand RemoveDepoCommand => removeDepoCommand ?? (removeDepoCommand = new RelayCommand(RemoveDepo));
         public ICommand TransferCommand => transferCommand ?? (transferCommand = new RelayCommand(Transfer));
+        public ICommand TransfAmountChangedCommand => transfAmountChangedCommand ?? (transfAmountChangedCommand = new RelayCommand(TransfAmountChanged));
         public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
         public bool ClientDoSelected { get => clientDoSelected; set { clientDoSelected = value; RaisePropertyChanged(nameof(ClientDoSelected)); } }
         public bool TransferEnabled { get => transferEnabled; set { transferEnabled = value; RaisePropertyChanged(nameof(TransferEnabled)); } }
@@ -177,6 +179,20 @@ namespace WpfBank.ViewModels
             if ((bool)dialog.ShowDialog() && depoTo != null)
                 DoTransfer();
         }
+        private void TransfAmountChanged(object e)
+        {
+            if (!decimal.TryParse((e as TextBox).Text, out decimal amount) || amount <= 0)
+                return;
+            TransferAmount = amount;
+            TransferOKEnabled = depo.Size - amount >= Account.minSize;
+            if (!TransferOKEnabled)
+            {
+                MessageBox.Show(
+                    $"Количество средств {depo.Size} на счету {depo.Number} не допускает сумму {transferAmount} списания.\n" +
+                    $"Максимальная сумма списания {depo.Size - Account.minSize}");
+                return;
+            }
+        }
         private void DoTransfer()
         {
             if (MessageBox.Show($"Вы действительно хотите перевести со счета №{depo.Number} на счет №{depoTo.Number} сумму {TransferAmount}?",
@@ -222,7 +238,7 @@ namespace WpfBank.ViewModels
                 MessageBox.Show("Нельзя делать перевод внутри одного и того же счета!!");
                 return;
             }
-            TransferEnabled = TransferOKEnabled = true;
+            TransferEnabled = true; TransferOKEnabled = false;
         }
         private void OkClientOfAddedDeposit(object e)
         {
@@ -314,24 +330,6 @@ namespace WpfBank.ViewModels
             MainViewModel.Log(comment);
             MessageBox.Show(comment);
             added = null;
-        }
-
-        private RelayCommand transfAmountChangedCommand;
-
-        public ICommand TransfAmountChangedCommand => transfAmountChangedCommand ?? (transfAmountChangedCommand = new RelayCommand(TransfAmountChanged));
-        private void TransfAmountChanged(object e)
-        {
-            if (!decimal.TryParse((e as TextBox).Text, out decimal amount))
-                return;
-            TransferAmount = amount;
-            TransferOKEnabled = depo.Size - amount >= Account.minSize;
-            if (!TransferOKEnabled)
-            {
-                MessageBox.Show(
-                    $"Количество средств {depo.Size} на счету {depo.Number} не допускает сумму {transferAmount} списания.\n" +
-                    $"Максимальная сумма списания {depo.Size - Account.minSize}");
-                return;
-            }
         }
     }
 }

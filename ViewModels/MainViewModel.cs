@@ -1,12 +1,9 @@
 ﻿using ClassLibrary;
 using FontAwesome.Sharp;
 using System;
-using System.ComponentModel;
-using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using WpfBank.Commands;
