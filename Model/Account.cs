@@ -5,10 +5,12 @@ namespace ClassLibrary
 {
     public class Account : GUIDed
     {
+        public const decimal minSize = 1;
         /// <summary>
         /// Хранит заголовок для текстового представления счета.
         /// </summary>
         public static readonly string header = string.Format("№\t\tSize\t\t\tRate\tCap");
+        private decimal size = minSize;
         #region Properties
         /// <summary>
         /// Возвращает номер счета.
@@ -21,7 +23,7 @@ namespace ClassLibrary
         /// <summary>
         /// Устанавливает и возвращает размеры счета.
         /// </summary>
-        public decimal Size { get; set; }
+        public decimal Size { get => size; set => size = value < minSize ? minSize : value; }
         /// <summary>
         /// Устанавливает и возвращает доходность в процентах.
         /// </summary>
@@ -51,6 +53,6 @@ namespace ClassLibrary
         /// <param name="tw"></param>
         public void Print(TextWriter tw) => tw.WriteLine(this);
         #endregion
-        public override string ToString() => (Size < 0 ? "Loan " : "Deposit ") + "№" + $"{Number};Size {Size};Rate {Rate:g3};Cap {Cap}";
+        public override string ToString() => "№" + $"{Number};Size {Size};Rate {Rate:g3};Cap {Cap}";
     }
 }

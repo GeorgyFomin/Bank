@@ -50,10 +50,9 @@ namespace WpfBank.ViewModels
                 {
                     foreach (Client client in dep.Clients)
                     {
-                        foreach (Account account in client.Accounts)
+                        foreach (Account loan in client.Loans)
                         {
-                            if (account.Size <= 0)
-                                loans.Add(account);
+                            loans.Add(loan);
                         }
                     }
                 }
@@ -72,10 +71,9 @@ namespace WpfBank.ViewModels
                 {
                     foreach (Client client in dep.Clients)
                     {
-                        foreach (Account account in client.Accounts)
+                        foreach (Account deposit in client.Deposits)
                         {
-                            if (account.Size >= 0)
-                                deposits.Add(account);
+                            deposits.Add(deposit);
                         }
                     }
                 }

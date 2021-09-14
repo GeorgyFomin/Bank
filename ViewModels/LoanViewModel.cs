@@ -27,7 +27,7 @@ namespace WpfBank.ViewModels
         private RelayCommand endLoanEditCommand;
         private RelayCommand cellChangedCommand;
         private bool clientDoSelected;
-        private DataTable loansTable, depositsTable;
+        private DataTable loansTable;
         private SqlDataAdapter adapter;
         private DataView dataView;
         private DataRowView dataRowView;
@@ -46,36 +46,13 @@ namespace WpfBank.ViewModels
                 {
                     foreach (Client client in dep.Clients)
                     {
-                        foreach (Account account in client.Accounts)
+                        foreach (Account loan in client.Loans)
                         {
-                            if (account.Size <= 0)
-                                loans.Add(account);
+                            loans.Add(loan);
                         }
                     }
                 }
                 return loans;
-            }
-        }
-        /// <summary>
-        /// Возвращает список всех депозитов банка.
-        /// </summary>
-        public ObservableCollection<Account> Deposits
-        {
-            get
-            {
-                ObservableCollection<Account> deposits = new ObservableCollection<Account>();
-                foreach (Dep dep in bank.Deps)
-                {
-                    foreach (Client client in dep.Clients)
-                    {
-                        foreach (Account account in client.Accounts)
-                        {
-                            if (account.Size >= 0)
-                                deposits.Add(account);
-                        }
-                    }
-                }
-                return deposits;
             }
         }
         /// <summary>
@@ -135,8 +112,6 @@ namespace WpfBank.ViewModels
                     adapter = new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Loans]", Connection = connection });
                     loansTable = new DataTable("Loans");
                     adapter.Fill(loansTable);
-                    depositsTable = new DataTable("Deposits");
-                    adapter.Fill(depositsTable);
                 }
                 catch
                 {
@@ -156,7 +131,7 @@ namespace WpfBank.ViewModels
             {
                 return;
             }
-            _ = Clients.First((g) => loan.ClientID == g.ID).Accounts.Remove(loan);
+            _ = Clients.First((g) => loan.ClientID == g.ID).Loans.Remove(loan);
             RaisePropertyChanged(nameof(Loans));
             MainViewModel.Log($"Удален кредит {loan}");
             if (MainViewModel.DBMode)
@@ -196,7 +171,7 @@ namespace WpfBank.ViewModels
         private void AddLoanToClient()
         {
             loan.ClientID = client.ID;
-            client.Accounts.Add(loan);
+            client.Loans.Add(loan);
             added = true;
             RaisePropertyChanged(nameof(Loan));
             MainViewModel.Log($"Клиенту {client} будет открыт кредит {loan}.");

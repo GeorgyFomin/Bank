@@ -40,8 +40,8 @@ namespace ClassLibrary
         /// <returns></returns>
         private static ObservableCollection<Client> GetRandomClients(int v, Random random) =>
             new ObservableCollection<Client>(Enumerable.Range(0, v).
-            Select(index => new Client(GetRandomString(random.Next(3, 6), random), GetRandomAccounts(random.Next(1, 5), random))).
-            ToList());
+            Select(index => new Client(GetRandomString(random.Next(3, 6), random),
+                GetRandomAccounts(random.Next(1, 5), random), GetRandomAccounts(random.Next(1, 5), random))).ToList());
         /// <summary>
         /// Возвращает список случайных счетов.
         /// </summary>
@@ -53,12 +53,12 @@ namespace ClassLibrary
             Range(0, v).
             Select(index => new Account()
             {
-                // Случайна доходность.
+                // Случайная доходность.
                 Rate = MaxRate * (float)random.NextDouble(),
                 // Случайная капитализация.
                 Cap = random.NextDouble() < .5,
-                // Случайный размер вклада (положительный) или кредита (отрицательный).
-                Size = (decimal)(MaxSize * (2 * random.NextDouble() - 1))
+                // Случайный размер вклада.
+                Size = (decimal)(MaxSize * random.NextDouble())
             }).
             ToList());
         /// <summary>

@@ -7,20 +7,39 @@ namespace ClassLibrary
     public class Client : Named
     {
         /// <summary>
-        /// Хранит список вкладов.
+        /// Хранит список депозитов.
         /// </summary>
-        private ObservableCollection<Account> accounts = new ObservableCollection<Account>();
+        private ObservableCollection<Account> deposits = new ObservableCollection<Account>();
+        /// <summary>
+        /// Хранит список кредитов.
+        /// </summary>
+        private ObservableCollection<Account> loans = new ObservableCollection<Account>();
         #region Properties
         /// <summary>
-        /// Устанавливает и возвращает ссылки на счета клиента.
+        /// Устанавливает и возвращает ссылки на депозиты клиента.
         /// </summary>
-        public ObservableCollection<Account> Accounts
+        public ObservableCollection<Account> Deposits
         {
-            get => accounts;
+            get => deposits;
             set
             {
-                accounts = value ?? new ObservableCollection<Account>();
-                foreach (Account account in accounts)
+                deposits = value ?? new ObservableCollection<Account>();
+                foreach (Account account in deposits)
+                {
+                    account.ClientID = ID;
+                }
+            }
+        }
+        /// <summary>
+        /// Устанавливает и возвращает ссылки на кредиты клиента.
+        /// </summary>
+        public ObservableCollection<Account> Loans
+        {
+            get => loans;
+            set
+            {
+                loans = value ?? new ObservableCollection<Account>();
+                foreach (Account account in loans)
                 {
                     account.ClientID = ID;
                 }
@@ -32,7 +51,12 @@ namespace ClassLibrary
         public Guid DepID { get; set; }
         #endregion
         public Client() : base() { }
-        public Client(string name = null, ObservableCollection<Account> accounts = null) : base(name) => Accounts = accounts;
+        public Client(string name = null, ObservableCollection<Account> deposits = null, ObservableCollection<Account> loans = null) : base(name)
+        {
+            Deposits = deposits;
+            Loans = loans;
+        }
+
         /// <summary>
         /// Печатает сведения о клиенте.
         /// </summary>
@@ -40,12 +64,19 @@ namespace ClassLibrary
         public void Print(TextWriter tw)
         {
             // Печатаем информацию о клиенте.
-            tw.WriteLine("Клиент\n" + Info() + "\nСчета");
+            tw.WriteLine("Клиент\n" + Info() + "\nДепозиты");
             tw.WriteLine(Account.header);
-            // Печатаем сведения о счетах.
-            foreach (Account account in Accounts)
+            // Печатаем сведения о депозитах.
+            foreach (Account deposit in Deposits)
             {
-                account.PrintFields(tw);
+                deposit.PrintFields(tw);
+            }
+            tw.WriteLine("\nКредиты");
+            tw.WriteLine(Account.header);
+            // Печатаем сведения о кредитах.
+            foreach (Account loan in Loans)
+            {
+                loan.PrintFields(tw);
             }
         }
     }

@@ -1,4 +1,6 @@
-﻿using System.Windows.Input;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using WpfBank.Commands;
 using ClassLibrary;
 using System.Collections.ObjectModel;
@@ -31,12 +33,14 @@ namespace WpfBank.ViewModels
         private RelayCommand cellChangedCommand;
         private bool clientDoSelected;
         private bool transferEnabled;
+        private bool transferOKEnabled;
         private Account depoTo;
         private decimal transferAmount;
         private bool depoFromSelected;
-        private DataTable depositsTable, loansTable;
+        private DataTable depositsTable;
         private SqlDataAdapter adapter;
         private DataView dataView;
+        private object dataSource;
         private DataRowView dataRowView;
         private bool? added = null;
         #endregion
@@ -53,10 +57,9 @@ namespace WpfBank.ViewModels
                 {
                     foreach (Client client in dep.Clients)
                     {
-                        foreach (Account account in client.Accounts)
+                        foreach (Account deposit in client.Deposits)
                         {
-                            if (account.Size >= 0)
-                                deposits.Add(account);
+                            deposits.Add(deposit);
                         }
                     }
                 }
@@ -81,28 +84,6 @@ namespace WpfBank.ViewModels
                 return clients;
             }
         }
-        /// <summary>
-        /// Возвращает список всех кредитов банка.
-        /// </summary>
-        public ObservableCollection<Account> Loans
-        {
-            get
-            {
-                ObservableCollection<Account> loans = new ObservableCollection<Account>();
-                foreach (Dep dep in bank.Deps)
-                {
-                    foreach (Client client in dep.Clients)
-                    {
-                        foreach (Account account in client.Accounts)
-                        {
-                            if (account.Size <= 0)
-                                loans.Add(account);
-                        }
-                    }
-                }
-                return loans;
-            }
-        }
         public Account Depo { get => depo; set { depo = value; RaisePropertyChanged(nameof(Depo)); } }
         public Client Client { get => client; set { client = value; RaisePropertyChanged(nameof(Client)); } }
         public ICommand SelCommand => selCommand ?? (selCommand =
@@ -124,6 +105,7 @@ namespace WpfBank.ViewModels
         public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
         public bool ClientDoSelected { get => clientDoSelected; set { clientDoSelected = value; RaisePropertyChanged(nameof(ClientDoSelected)); } }
         public bool TransferEnabled { get => transferEnabled; set { transferEnabled = value; RaisePropertyChanged(nameof(TransferEnabled)); } }
+        public bool TransferOKEnabled { get => transferOKEnabled; set { transferOKEnabled = value; RaisePropertyChanged(nameof(TransferOKEnabled)); } }
         public ICommand OKCommand => oKCommand ?? (oKCommand = new RelayCommand(OkClientOfAddedDeposit));
         public Account DepoTo { get => depoTo; set { depoTo = value; RaisePropertyChanged(nameof(DepoTo)); } }
         public decimal TransferAmount { get => transferAmount; set { transferAmount = value; RaisePropertyChanged(nameof(TransferAmount)); } }
@@ -133,7 +115,7 @@ namespace WpfBank.ViewModels
         public ICommand CellChangedCommand => cellChangedCommand ?? (cellChangedCommand = new RelayCommand(CellChanged));
         public bool DepoFromSelected { get => depoFromSelected; set { depoFromSelected = value; RaisePropertyChanged(nameof(DepoFromSelected)); } }
         public DataView DataView { get => dataView; set { dataView = value; RaisePropertyChanged(nameof(DataView)); } }
-        public object DataSource { get; set; }
+        public object DataSource { get => dataSource; set { dataSource = value; RaisePropertyChanged(nameof(DataSource)); } }
         public DataRowView DataRowView { get => dataRowView; set { dataRowView = value; RaisePropertyChanged(nameof(DataRowView)); } }
         #endregion
         public DepositViewModel(Bank bank) : this()
@@ -145,9 +127,6 @@ namespace WpfBank.ViewModels
                     adapter = new SqlDataAdapter(new SqlCommand() { CommandText = "select * from [Deposits]", Connection = connection });
                     depositsTable = new DataTable("Deposits");
                     adapter.Fill(depositsTable);
-                    loansTable = new DataTable("Loans");
-                    adapter.SelectCommand = new SqlCommand() { CommandText = "select * from [Loans]", Connection = connection };
-                    adapter.Fill(loansTable);
                 }
                 catch
                 {
@@ -165,7 +144,7 @@ namespace WpfBank.ViewModels
         {
             if (depo == null || MessageBox.Show($"Удалить депозит №{depo.Number}?", $"Удаление депозита №{depo.Number}", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
                 return;
-            Clients.First((g) => depo.ClientID == g.ID).Accounts.Remove(depo);
+            Clients.First((g) => depo.ClientID == g.ID).Deposits.Remove(depo);
             RaisePropertyChanged(nameof(Deposits));
             MainViewModel.Log($"Удален депозит №{depo.Number}");
             if (MainViewModel.DBMode)
@@ -205,18 +184,45 @@ namespace WpfBank.ViewModels
                 return;
             depo.Size -= TransferAmount;
             DepoTo.Size += TransferAmount;
-            MainViewModel.Log($"Со счета {depo} переведено {TransferAmount} на счет {depoTo}");
+            MainViewModel.Log($"Со счета {depo} будет переведено {TransferAmount} на счет {depoTo}");
+            if (MainViewModel.DBMode)
+            {
+                using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
+                    try
+                    {
+                        connection.Open();
+                        new SqlCommand($"update {depositsTable} set Size = " + depo.Size.ToString(CultureInfo.InvariantCulture) +
+                            ", Rate = " + depo.Rate.ToString(CultureInfo.InvariantCulture) + ", Cap = " + (depo.Cap ? "1" : "0") +
+                            $"where Id = '{depo.ID}'", connection).ExecuteNonQuery();
+                        new SqlCommand($"update {depositsTable} set Size = " + depoTo.Size.ToString(CultureInfo.InvariantCulture) +
+                            ", Rate = " + depoTo.Rate.ToString(CultureInfo.InvariantCulture) + ", Cap = " + (depoTo.Cap ? "1" : "0") +
+                            $"where Id = '{depoTo.ID}'", connection).ExecuteNonQuery();
+                        depositsTable.Dispose();
+                        adapter.SelectCommand = new SqlCommand() { CommandText = "select * from [Deposits]", Connection = connection };
+                        depositsTable = new DataTable("Deposits");
+                        adapter.Fill(depositsTable);
+                        DataSource = DataView = depositsTable.DefaultView;
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+            }
+
+            string comment = $"Со счета {depo} переведено {TransferAmount} на счет {depoTo}";
+            MainViewModel.Log(comment);
+            MessageBox.Show(comment);
         }
         private void DepoToTransfer(object e)
         {
-            if ((DepoTo = (e as ListBox).SelectedItem is Account depo ? depo : null) == null)
+            if ((DepoTo = (e as ListBox).SelectedItem is Account account ? account : null) == null)
                 return;
             if (depoTo.ID == Depo.ID)
             {
                 MessageBox.Show("Нельзя делать перевод внутри одного и того же счета!!");
                 return;
             }
-            TransferEnabled = true;
+            TransferEnabled = TransferOKEnabled = true;
         }
         private void OkClientOfAddedDeposit(object e)
         {
@@ -244,7 +250,7 @@ namespace WpfBank.ViewModels
         private void AddDepoTo()
         {
             depo.ClientID = client.ID;
-            client.Accounts.Add(depo);
+            client.Deposits.Add(depo);
             RaisePropertyChanged(nameof(Depo));
             MainViewModel.Log($"Клиенту {client} будет открыт депозит {depo}.");
             added = true;
@@ -308,6 +314,24 @@ namespace WpfBank.ViewModels
             MainViewModel.Log(comment);
             MessageBox.Show(comment);
             added = null;
+        }
+
+        private RelayCommand transfAmountChangedCommand;
+
+        public ICommand TransfAmountChangedCommand => transfAmountChangedCommand ?? (transfAmountChangedCommand = new RelayCommand(TransfAmountChanged));
+        private void TransfAmountChanged(object e)
+        {
+            if (!decimal.TryParse((e as TextBox).Text, out decimal amount))
+                return;
+            TransferAmount = amount;
+            TransferOKEnabled = depo.Size - amount >= Account.minSize;
+            if (!TransferOKEnabled)
+            {
+                MessageBox.Show(
+                    $"Количество средств {depo.Size} на счету {depo.Number} не допускает сумму {transferAmount} списания.\n" +
+                    $"Максимальная сумма списания {depo.Size - Account.minSize}");
+                return;
+            }
         }
     }
 }

@@ -100,25 +100,37 @@ namespace WpfBank.ViewModels
                             }
                         }
                         break;
+                    case "Deposits":
+                        foreach (Dep dep in bank.Deps)
+                        {
+                            foreach (Client client in dep.Clients)
+                            {
+                                foreach (Account deposit in client.Deposits)
+                                {
+                                    new SqlCommand($"insert into {tableName} values ('{deposit.ID}', '{deposit.ClientID}', {deposit.Number}, " +
+                                       deposit.Size.ToString(CultureInfo.InvariantCulture) + ", " + deposit.Rate.ToString(CultureInfo.InvariantCulture) +
+                                      (deposit.Cap ? ", 1" : ", 0") + ")", connection).ExecuteNonQuery();
+                                }
+                            }
+                        }
+                        break;
                     case "Loans":
                         foreach (Dep dep in bank.Deps)
                         {
                             foreach (Client client in dep.Clients)
                             {
-                                foreach (Account account in client.Accounts)
+                                foreach (Account loan in client.Loans)
                                 {
-                                    new SqlCommand($"insert into " + (account.Size >= 0 ? "Deposits" : "Loans") +
-                                      $" values ('{account.ID}', '{account.ClientID}', {account.Number}, "
-                                      + account.Size.ToString(CultureInfo.InvariantCulture) + ", " +
-                                      account.Rate.ToString(CultureInfo.InvariantCulture) +
-                                      (account.Cap ? ", 1" : ", 0") + ")", connection).ExecuteNonQuery();
+                                    new SqlCommand($"insert into {tableName} values ('{loan.ID}', '{loan.ClientID}', {loan.Number}, "
+                                      + loan.Size.ToString(CultureInfo.InvariantCulture) + ", " + loan.Rate.ToString(CultureInfo.InvariantCulture) +
+                                      (loan.Cap ? ", 1" : ", 0") + ")", connection).ExecuteNonQuery();
                                 }
                             }
                         }
                         break;
                 }
             }
-            for (int i = tableNames.Length - 1; i > 0; i--)
+            for (int i = tableNames.Length - 1; i >= 0; i--)
             {
                 PopulateDBTable(tableNames[i]);
             }

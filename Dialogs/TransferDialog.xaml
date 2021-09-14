@@ -16,13 +16,25 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <Button Style="{StaticResource headerBtn}" Content="Ok" HorizontalAlignment="Left" VerticalAlignment="Top" Width="50" Command="{Binding OKDepoToCommand}" 
-                IsEnabled="{Binding TransferEnabled}" CommandParameter="{Binding ElementName=transferDialog}" IsDefault="True" FontSize="20"/>
+                IsEnabled="{Binding TransferOKEnabled}" CommandParameter="{Binding ElementName=transferDialog}" IsDefault="True" FontSize="20"/>
         <TextBlock Grid.Row="1" VerticalAlignment="Center" Text = " Сумма to Transfer" FontSize="20"/>
-        <TextBox Grid.Row="2" FontSize="20" Width="200" Foreground="Yellow" Background="Black" Text="{Binding TransferAmount}" IsEnabled="{Binding TransferEnabled}" 
-                 HorizontalAlignment="Left"/>
-        <TextBlock Grid.Row="3" Text="Transfer To Deposit №" FontSize="20"/>
-        <ListBox Style="{StaticResource ResourceKey=BlackNavy}" Grid.Row="4" x:Name="depoToListBox" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="200" 
-                  ItemsSource="{Binding Deposits}" FontSize="20" DisplayMemberPath="Number">
+        <TextBox x:Name="TrasferBox" Grid.Row="2" FontSize="20" Width="200" Foreground="Yellow" Background="Black" Text="{Binding TransferAmount}" IsEnabled="{Binding TransferEnabled}" 
+                 HorizontalAlignment="Left">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="TextChanged">
+                    <i:InvokeCommandAction Command="{Binding TransfAmountChangedCommand}" CommandParameter="{Binding ElementName=TrasferBox}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TextBox>
+        <TextBlock Grid.Row="3" Text="Transfer To Account" FontSize="20"/>
+        <ListBox Style="{StaticResource ResourceKey=BlackNavy}" Grid.Row="4" x:Name="depoToListBox" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="200"
+                  ItemsSource="{Binding Deposits}" FontSize="20" >
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Path=Number}" 
+                       ToolTipService.ToolTip="{Binding Path=Size}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="SelectionChanged">
                     <i:InvokeCommandAction Command="{Binding DepoToSelectedCommand}" CommandParameter="{Binding ElementName=depoToListBox}"/>
