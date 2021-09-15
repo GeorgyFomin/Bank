@@ -34,26 +34,10 @@
                 <i:EventTrigger EventName="CellEditEnding">
                     <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
                 </i:EventTrigger>
-                <!--<i:EventTrigger EventName="RowEditEnding">
-                    <i:InvokeCommandAction Command="{Binding EndClientEditCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
-                </i:EventTrigger>-->
                 <i:EventTrigger EventName="CurrentCellChanged">
                     <i:InvokeCommandAction Command="{Binding CellChangedCommand}" CommandParameter="{Binding ElementName=clientsGrid}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </DataGrid>
-        <!--<ListView x:Name="clientsListView" ItemContainerStyle="{DynamicResource ListViewItemStyle1}" Style="{StaticResource listViewStyle}" 
-                  MaxWidth="100" MaxHeight="400" ItemsSource="{Binding Clients}">
-            <ListView.ToolTip>
-                <ToolTip Style="{StaticResource toolTipStyle}">
-                    Клиенты
-                </ToolTip>
-            </ListView.ToolTip>
-            <ListView.View>
-                <GridView ColumnHeaderContainerStyle="{StaticResource headerStyle}">
-                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
-                </GridView>
-            </ListView.View>
-        </ListView>-->
     </Grid>
 </ContentControl>

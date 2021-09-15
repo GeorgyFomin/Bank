@@ -104,7 +104,7 @@ namespace WpfBank.ViewModels
         public ICommand SelCommand => selCommand ?? (selCommand =
             new RelayCommand((e) =>
             {
-                // Получаем ссылку строку, выбранную в DataGrid.
+                // Получаем ссылку на строку, выбранную в DataGrid.
                 object selItem = (e as DataGrid).SelectedItem;
                 // Фильтруем ссылку.
                 if (selItem == null || selItem.ToString() == "{NewItemPlaceholder}")
@@ -234,17 +234,19 @@ namespace WpfBank.ViewModels
             RaisePropertyChanged(nameof(Client));
             MainViewModel.Log($"В отдел {dep} будет добавлен клиент {client}.");
         }
+        void SetNewRowView(Client client)
+        {
+            int lastRowIndex = clientsTable.Rows.Count - 1;
+            clientsTable.Rows[lastRowIndex][0] = client.ID;
+            clientsTable.Rows[lastRowIndex][1] = client.Name;
+            clientsTable.Rows[lastRowIndex][2] = client.DepID;
+            clientsTable.AcceptChanges();
+            DataSource = DataView = clientsTable.DefaultView;
+        }
         private void DBChanged(object e)
         {
-            void SetNewRowView(Client client)
-            {
-                int lastRowIndex = clientsTable.Rows.Count - 1;
-                clientsTable.Rows[lastRowIndex][0] = client.ID;
-                clientsTable.Rows[lastRowIndex][1] = client.Name;
-                clientsTable.Rows[lastRowIndex][2] = client.DepID;
-                clientsTable.AcceptChanges();
-                DataSource = DataView = clientsTable.DefaultView;
-            }
+            if ((e as DataGrid).CurrentColumn == null)
+                return;
             // Определяем имя поля, с которым связан текущий столбец, ячейка которого изменена.
             string columnName = ((e as DataGrid).CurrentColumn.ClipboardContentBinding as Binding).Path.Path;
             // Свойству columnName объекта класса Client присваиваем значение, кторое возвращает

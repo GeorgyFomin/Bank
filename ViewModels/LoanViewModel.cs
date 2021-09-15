@@ -32,6 +32,8 @@ namespace WpfBank.ViewModels
         private DataView dataView;
         private DataRowView dataRowView;
         private bool? added = null;
+        private bool endEdited;
+        private DataGridCellInfo cellView;
         #endregion
         #region Properties
         /// <summary>
@@ -167,6 +169,7 @@ namespace WpfBank.ViewModels
                         AddLoanToClient();
                 } while (!flag);
             }
+            endEdited = true;
         }
         private void AddLoanToClient()
         {
@@ -190,8 +193,9 @@ namespace WpfBank.ViewModels
                 loansTable.AcceptChanges();
                 DataSource = DataView = loansTable.DefaultView;
             }
+            DataGridColumn column = (e as DataGrid).CurrentColumn;
             // Определяем имя поля, с которым связан текущий столбец, ячейка которого изменена.
-            string columnName = ((e as DataGrid).CurrentColumn.ClipboardContentBinding as Binding).Path.Path;
+            string columnName = (column.ClipboardContentBinding as Binding).Path.Path;
             // Свойству columnName объекта класса Client присваиваем значение, кторое возвращает
             // расширяющий обобщенный метод dataRowView.Row.Field<T>(columnName).
             // Тип T является типом поля столбца columnName, т.е. dataRowView.Row.Table.Columns[columnName].DataType.
@@ -224,14 +228,37 @@ namespace WpfBank.ViewModels
                 {
                     throw;
                 }
+            return;
         }
         private void CellChanged(object e)
         {
+            if (MainViewModel.DBMode)
+            {
+                DataGrid dataGrid = (DataGrid)e;
+                if (dataGrid.CurrentColumn == null)
+                    return;
+                // Отфильтровываем смену ячейки в одной и той же строке.
+                DataGridCellInfo cell = dataGrid.CurrentCell;
+                if (endEdited && cell != cellView && (DataRowView)cell.Item == DataRowView)
+                {
+                    int rowIndex = DataView.Table.Rows.IndexOf(DataRowView.Row),
+                        columnIndex = cellView.Column.DisplayIndex;
+                    loansTable.Rows[rowIndex][columnIndex] = DataRowView[columnIndex];
+                    loansTable.AcceptChanges();
+                    DataSource = DataView = loansTable.DefaultView;
+                    MessageBox.Show("После редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    endEdited = false;
+                    added = null;
+                    return;
+                }
+                cellView = cell;
+            }
             if (added == null)
                 return;
+            string comment;
             if (MainViewModel.DBMode)
                 DBChanged(e);
-            string comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : $"Поля кредита №{loan.Number} отредактированы.";
+            comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : $"Поля кредита №{loan.Number} отредактированы.";
             MainViewModel.Log(comment);
             MessageBox.Show(comment);
             added = null;

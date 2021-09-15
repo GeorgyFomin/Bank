@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using WpfBank.Commands;
 using ClassLibrary;
 using System.Collections.ObjectModel;
@@ -44,6 +42,8 @@ namespace WpfBank.ViewModels
         private object dataSource;
         private DataRowView dataRowView;
         private bool? added = null;
+        private DataGridCellInfo cellView;
+        private bool endEdited;
         #endregion
         #region Properties
         /// <summary>
@@ -262,6 +262,7 @@ namespace WpfBank.ViewModels
                         AddDepoTo();
                 } while (!flag);
             }
+            endEdited = true;
         }
         private void AddDepoTo()
         {
@@ -285,8 +286,9 @@ namespace WpfBank.ViewModels
                 depositsTable.AcceptChanges();
                 DataSource = DataView = depositsTable.DefaultView;
             }
+            DataGridColumn column = (e as DataGrid).CurrentColumn;
             // Определяем имя поля, с которым связан текущий столбец, ячейка которого изменена.
-            string columnName = ((e as DataGrid).CurrentColumn.ClipboardContentBinding as Binding).Path.Path;
+            string columnName = (column.ClipboardContentBinding as Binding).Path.Path;
             // Свойству columnName объекта класса Client присваиваем значение, кторое возвращает
             // расширяющий обобщенный метод dataRowView.Row.Field<T>(columnName).
             // Тип T является типом поля столбца columnName, т.е. dataRowView.Row.Table.Columns[columnName].DataType.
@@ -319,9 +321,31 @@ namespace WpfBank.ViewModels
                 {
                     throw;
                 }
+            return;
         }
         private void CellChanged(object e)
         {
+            if (MainViewModel.DBMode)
+            {
+                DataGrid dataGrid = (DataGrid)e;
+                if (dataGrid.CurrentColumn == null)
+                    return;
+                // Отфильтровываем смену ячейки в одной и той же строке.
+                DataGridCellInfo cell = dataGrid.CurrentCell;
+                if (endEdited && cell != cellView && (DataRowView)cell.Item == DataRowView)
+                {
+                    int rowIndex = DataView.Table.Rows.IndexOf(DataRowView.Row),
+                        columnIndex = cellView.Column.DisplayIndex;
+                    depositsTable.Rows[rowIndex][columnIndex] = DataRowView[columnIndex];
+                    depositsTable.AcceptChanges();
+                    DataSource = DataView = depositsTable.DefaultView;
+                    MessageBox.Show("После редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    endEdited = false;
+                    added = null;
+                    return;
+                }
+                cellView = cell;
+            }
             if (added == null)
                 return;
             if (MainViewModel.DBMode)

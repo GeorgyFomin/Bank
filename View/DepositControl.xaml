@@ -29,16 +29,14 @@
                 <DataGridTextColumn IsReadOnly="True" Header="Number" Binding="{Binding Number}"/>
                 <DataGridTextColumn Header="Size" Binding="{Binding Size}" EditingElementStyle="{StaticResource EditingCellTextBox}"/>
                 <DataGridTextColumn Header="Rate" Binding="{Binding Rate}" EditingElementStyle="{StaticResource EditingCellTextBox}"/>
-                <DataGridCheckBoxColumn Header="Cap" Binding="{Binding Cap}">
+                <DataGridCheckBoxColumn Header="Cap" Binding="{Binding Cap}" >
                     <!--<DataGridCheckBoxColumn.ElementStyle>
                         <Style TargetType="CheckBox">
                             <Style.Setters>
                                 <Setter Property="IsChecked" 
                                         Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content.IsChecked}" />
-                                -->
-                    <!--<Setter Property="SnapsToDevicePixels" Value="true" />
-                    <Setter Property="OverridesDefaultStyle" Value="true" />-->
-                    <!--
+                                <Setter Property="SnapsToDevicePixels" Value="true" />
+                                <Setter Property="OverridesDefaultStyle" Value="true" />
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="{x:Type CheckBox}">
