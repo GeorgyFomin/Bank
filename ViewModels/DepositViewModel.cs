@@ -90,6 +90,7 @@ namespace WpfBank.ViewModels
         public ICommand SelCommand => selCommand ?? (selCommand =
             new RelayCommand((e) =>
             {
+                //MessageBox.Show("Sel");
                 // Получаем ссылку строку, выбранную в DataGrid.
                 object selItem = (e as DataGrid).SelectedItem;
                 // Фильтруем ссылку.
@@ -248,6 +249,7 @@ namespace WpfBank.ViewModels
         }
         private void EditDeposit(object e)
         {
+            //MessageBox.Show("EndEdit");
             if (depo.ClientID != default)
             {
                 added = false;
@@ -272,7 +274,7 @@ namespace WpfBank.ViewModels
             MainViewModel.Log($"Клиенту {client} будет открыт депозит {depo}.");
             added = true;
         }
-        private void DBChanged(object e)
+        private string DBChanged(object e)
         {
             void SetNewRowView(Account depo)
             {
@@ -321,12 +323,13 @@ namespace WpfBank.ViewModels
                 {
                     throw;
                 }
-            return;
+            return columnName;
         }
         private void CellChanged(object e)
         {
             if (MainViewModel.DBMode)
             {
+                //MessageBox.Show("Changed");
                 DataGrid dataGrid = (DataGrid)e;
                 if (dataGrid.CurrentColumn == null)
                     return;
@@ -348,9 +351,12 @@ namespace WpfBank.ViewModels
             }
             if (added == null)
                 return;
+            string comment = string.Empty;
             if (MainViewModel.DBMode)
-                DBChanged(e);
-            string comment = added.Value ? $"Клиенту {client} открыт депозит {depo}" : $"Поля депозита №{depo.Number} отредактированы.";
+                comment = DBChanged(e);
+            comment = added.Value ? $"Клиенту {client} открыт депозит {depo}" :
+                MainViewModel.DBMode ? "Поле " + comment + $" депозита №{depo.Number} отредактировано." :
+                $"Поля депозита №{depo.Number} отредактированы.";
             MainViewModel.Log(comment);
             MessageBox.Show(comment);
             added = null;

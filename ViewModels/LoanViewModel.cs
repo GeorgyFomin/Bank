@@ -179,7 +179,7 @@ namespace WpfBank.ViewModels
             RaisePropertyChanged(nameof(Loan));
             MainViewModel.Log($"Клиенту {client} будет открыт кредит {loan}.");
         }
-        private void DBChanged(object e)
+        private string DBChanged(object e)
         {
             void SetNewRowView(Account loan)
             {
@@ -228,7 +228,7 @@ namespace WpfBank.ViewModels
                 {
                     throw;
                 }
-            return;
+            return columnName;
         }
         private void CellChanged(object e)
         {
@@ -255,10 +255,11 @@ namespace WpfBank.ViewModels
             }
             if (added == null)
                 return;
-            string comment;
+            string comment = string.Empty;
             if (MainViewModel.DBMode)
-                DBChanged(e);
-            comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : $"Поля кредита №{loan.Number} отредактированы.";
+                comment = DBChanged(e);
+            comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" :
+                MainViewModel.DBMode ? "Поле " + comment + $" кредита №{loan.Number} отредактировано." : $"Поля кредита №{loan.Number} отредактированы.";
             MainViewModel.Log(comment);
             MessageBox.Show(comment);
             added = null;
