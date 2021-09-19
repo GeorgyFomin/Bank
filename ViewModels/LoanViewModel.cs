@@ -17,25 +17,71 @@ namespace WpfBank.ViewModels
     public class LoanViewModel : ViewModelBase
     {
         #region Fields
+        #region Поля общего назначения
+        /// <summary>
+        /// Хранит ссылку на текущий банк.
+        /// </summary>
         private readonly Bank bank;
+        /// <summary>
+        /// Хранит ссылку на текущий адаптер связи с базой данных.
+        /// </summary>
+        private readonly SqlDataAdapter adapter;
+        /// <summary>
+        /// Хранит ссылку на таблицу с кредитами.
+        /// </summary>
+        private readonly DataTable loansTable;
+        /// <summary>
+        /// Хранит ссылку на текущий кредит.
+        /// </summary>
         private Account loan;
+        /// <summary>
+        /// Хранит ссылку на клиента, которому открыт новый кредит.
+        /// </summary>
         private Client client;
-        private RelayCommand selCommand;
-        private RelayCommand removeLoanCommand;
-        private RelayCommand clientSelectedCommand;
-        private RelayCommand oKCommand;
-        private RelayCommand endLoanEditCommand;
-        private RelayCommand cellChangedCommand;
-        private bool clientDoSelected;
-        private DataTable loansTable;
-        private SqlDataAdapter adapter;
+        /// <summary>
+        /// Хранит ссылку на текущее содержимое таблицы кредитов.
+        /// </summary>
         private DataView dataView;
+        /// <summary>
+        /// Хранит ссылку на содержимое текущей строки таблицы кредитов.
+        /// </summary>
         private DataRowView dataRowView;
+        /// <summary>
+        /// Хранит ссылку на информацию об отредактированной ячейки таблицы кредитов.
+        /// </summary>
+        private DataGridCellInfo editedCell;
+        /// <summary>
+        /// Хранит ссылку на отредактированную колонку таблицы кредитов.
+        /// </summary>
+        private DataGridColumn editedColumn;
+        /// <summary>
+        /// Хранит ссылку на текущую колонку таблицы кредитов.
+        /// </summary>
+        private DataGridColumn curColumn;
+        /// <summary>
+        /// Хранит флаг, определяющий действия по сохранению данных в базе - добавление новой записи true, редактирование выбранной записи false, отказ от изменения null.
+        /// </summary>
         private bool? added = null;
+        /// <summary>
+        /// Хранит флаг, определяющий состояние редактирования выбранной записи - отредактированная true, нет false.
+        /// </summary>
         private bool endEdited;
-        private DataGridCellInfo cellView;
+        /// <summary>
+        /// Хранит флаг, определяющий состояние выборки из списка клиента открываемого депозита.
+        /// </summary>
+        private bool clientDoSelected;
+        #endregion
+        #region Команды управления событиями
+        private RelayCommand selectionChangedCommand;
+        private RelayCommand removeLoanCommand;
+        private RelayCommand loanEditEndingCommand;
+        private RelayCommand cellChangedCommand;
+        private RelayCommand clientSelectedCommand;
+        private RelayCommand oKClientSelectionCommand;
+        #endregion
         #endregion
         #region Properties
+        #region Свойства общего назначения
         /// <summary>
         /// Возвращает список всех кредитов банка.
         /// </summary>
@@ -75,36 +121,49 @@ namespace WpfBank.ViewModels
                 return clients;
             }
         }
+        /// <summary>
+        /// Устанавливает и возвращает ссылку на содержимое таблицы.
+        /// </summary>
+        public DataView DataView { get => dataView; set { dataView = value; RaisePropertyChanged(nameof(DataView)); } }
+        /// <summary>
+        /// Устанавливает и возвращает ссылку на текущий источник данных в таблице. Это либо DataView в режиме DBMode, либо Loans. 
+        /// </summary>
+        public object DataSource { get; set; }
+        /// <summary>
+        /// Устанавливает и возвращает ссылку на выбранную строку в содержимом таблицы DataView.
+        /// </summary>
+        public DataRowView DataRowView { get => dataRowView; set { dataRowView = value; RaisePropertyChanged(nameof(DataRowView)); } }
+        /// <summary>
+        /// Устанавливает и возвращает ссылку на текущий кредит.
+        /// </summary>
         public Account Loan { get => loan; set { loan = value; RaisePropertyChanged(nameof(Loan)); } }
+        /// <summary>
+        /// Возвращает и устанавливает клиента, которому приписываетя вновь открываемый кредит.
+        /// </summary>
         public Client Client { get => client; set { client = value; RaisePropertyChanged(nameof(Client)); } }
-        public ICommand SelCommand => selCommand ?? (selCommand =
-            new RelayCommand((e) =>
-            {
-                // Получаем ссылку строку, выбранную в DataGrid.
-                object selItem = (e as DataGrid).SelectedItem;
-                // Фильтруем ссылку.
-                if (selItem == null || selItem.ToString() == "{NewItemPlaceholder}")
-                    return;
-                // Определяем текущую строку DataRowView в режиме DBMode и текущий клиента Deposit в любом режиме.
-                Loan = MainViewModel.DBMode ?
-                (DataRowView = (DataRowView)selItem).IsNew ? new Account() : Loans.First((g) => DataRowView.Row.Field<Guid>("Id") == g.ID) :
-                (Account)selItem;
-            }));
-        public ICommand RemoveLoanCommand => removeLoanCommand ?? (removeLoanCommand = new RelayCommand(RemoveLoan));
-        public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
+        /// <summary>
+        /// Хранит и возвращает флаг выбора клиента, которому приписываетя вновь открываемый депозит.
+        /// </summary>
         public bool ClientDoSelected { get => clientDoSelected; set { clientDoSelected = value; RaisePropertyChanged(nameof(ClientDoSelected)); } }
-        public ICommand OKCommand => oKCommand ?? (oKCommand = new RelayCommand((e) =>
+        #endregion
+        #region Команды - обработчики событий.
+        public ICommand SelectionChangedCommand => selectionChangedCommand ?? (selectionChangedCommand = new RelayCommand(SelectLoan));
+        public ICommand RemoveLoanCommand => removeLoanCommand ?? (removeLoanCommand = new RelayCommand(RemoveLoan));
+        public ICommand LoanEditEndingCommand => loanEditEndingCommand ?? (loanEditEndingCommand = new RelayCommand(EditLoan));
+        public ICommand CellChangedCommand => cellChangedCommand ?? (cellChangedCommand = new RelayCommand(CellChanged));
+        #region Команды выбора клиента вновь созданного кредита
+        public ICommand ClientSelectedCommand => clientSelectedCommand ?? (clientSelectedCommand = new RelayCommand((e) => ClientDoSelected = true));
+        public ICommand OKClientSelectionCommand => oKClientSelectionCommand ?? (oKClientSelectionCommand = new RelayCommand((e) =>
         {
             ClientsDialog dialog = e as ClientsDialog;
             Client = dialog.clientListBox.SelectedItem is Client client ? client : null;
             dialog.DialogResult = true;
         }));
-        public ICommand EndLoanEditCommand => endLoanEditCommand ?? (endLoanEditCommand = new RelayCommand(EditLoan));
-        public ICommand CellChangedCommand => cellChangedCommand ?? (cellChangedCommand = new RelayCommand(CellChanged));
-        public DataView DataView { get => dataView; set { dataView = value; RaisePropertyChanged(nameof(DataView)); } }
-        public object DataSource { get; set; }
-        public DataRowView DataRowView { get => dataRowView; set { dataRowView = value; RaisePropertyChanged(nameof(DataRowView)); } }
         #endregion
+        #endregion
+        #endregion
+        #region Methods
+        #region Constructors
         public LoanViewModel(Bank bank) : this()
         {
             using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
@@ -127,6 +186,20 @@ namespace WpfBank.ViewModels
                 DataSource = Loans;
         }
         public LoanViewModel() { }
+        #endregion
+        #region Handlers
+        private void SelectLoan(object e)
+        {
+            // Получаем ссылку строку, выбранную в DataGrid.
+            object selItem = (e as DataGrid).SelectedItem;
+            // Фильтруем ссылку.
+            if (selItem == null || selItem.ToString() == "{NewItemPlaceholder}")
+                return;
+            // Определяем текущую строку DataRowView в режиме DBMode и текущий клиента Deposit в любом режиме.
+            Loan = MainViewModel.DBMode ?
+            (DataRowView = (DataRowView)selItem).IsNew ? new Account() : Loans.First((g) => DataRowView.Row.Field<Guid>("Id") == g.ID) :
+            (Account)selItem;
+        }
         private void RemoveLoan(object obj)
         {
             if (loan == null || MessageBox.Show($"Удалить кредит №{loan.Number}?", "Удаление кредита " + loan.Number, MessageBoxButton.YesNo) != MessageBoxResult.Yes)
@@ -155,6 +228,14 @@ namespace WpfBank.ViewModels
         }
         private void EditLoan(object e)
         {
+            void InsertLoanIntoClient()
+            {
+                loan.ClientID = client.ID;
+                client.Loans.Add(loan);
+                added = true;
+                RaisePropertyChanged(nameof(Loan));
+                MainViewModel.Log($"Клиенту {client} будет открыт кредит {loan}.");
+            }
             if (loan.ClientID != default)
             {
                 added = false;
@@ -166,103 +247,110 @@ namespace WpfBank.ViewModels
                 do
                 {
                     if (flag = (bool)new ClientsDialog { DataContext = this }.ShowDialog() && client != null)
-                        AddLoanToClient();
+                        InsertLoanIntoClient();
                 } while (!flag);
             }
             endEdited = true;
         }
-        private void AddLoanToClient()
-        {
-            loan.ClientID = client.ID;
-            client.Loans.Add(loan);
-            added = true;
-            RaisePropertyChanged(nameof(Loan));
-            MainViewModel.Log($"Клиенту {client} будет открыт кредит {loan}.");
-        }
-        private string DBChanged(object e)
-        {
-            void SetNewRowView(Account loan)
-            {
-                int lastRowIndex = loansTable.Rows.Count - 1;
-                loansTable.Rows[lastRowIndex][0] = loan.ID;
-                loansTable.Rows[lastRowIndex][1] = loan.ClientID;
-                loansTable.Rows[lastRowIndex][2] = loan.Number;
-                loansTable.Rows[lastRowIndex][3] = loan.Size;
-                loansTable.Rows[lastRowIndex][4] = loan.Rate;
-                loansTable.Rows[lastRowIndex][5] = loan.Cap;
-                loansTable.AcceptChanges();
-                DataSource = DataView = loansTable.DefaultView;
-            }
-            DataGridColumn column = (e as DataGrid).CurrentColumn;
-            // Определяем имя поля, с которым связан текущий столбец, ячейка которого изменена.
-            string columnName = (column.ClipboardContentBinding as Binding).Path.Path;
-            // Свойству columnName объекта класса Client присваиваем значение, кторое возвращает
-            // расширяющий обобщенный метод dataRowView.Row.Field<T>(columnName).
-            // Тип T является типом поля столбца columnName, т.е. dataRowView.Row.Table.Columns[columnName].DataType.
-            typeof(Account).GetProperty(columnName).SetValue(Loan,
-                // Вызываем метод dataRowView.Row.Field<T>(columnName), где тип T есть dataRowView.Row.Table.Columns[columnName].DataType
-                // Для этого получаем MethodInfo метода Field,
-                typeof(DataRowExtensions).GetMethod("Field", new Type[] { typeof(DataRow), typeof(string) }).
-                // создаем статический метод Field<T> класса DataRowExtension, где тип T есть dataRowView.Row.Table.Columns[columnName].DataType,
-                // и вызываем его над объектом dataRowView.Row с параметром columnName
-                MakeGenericMethod(dataRowView.Row.Table.Columns[columnName].DataType).Invoke(null, new object[] { dataRowView.Row, columnName }));
-            using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
-                try
-                {
-                    connection.Open();
-                    if (!added.Value)
-                    {
-                        new SqlCommand($"update {loansTable} set Size = " + loan.Size.ToString(CultureInfo.InvariantCulture) +
-                            ", Rate = " + loan.Rate.ToString(CultureInfo.InvariantCulture) + ", Cap = " + (loan.Cap ? "1" : "0") +
-                            $"where Id = '{loan.ID}'", connection).ExecuteNonQuery();
-                    }
-                    else
-                    {
-                        SetNewRowView(loan);
-                        new SqlCommand($"insert into {loansTable} values ('{loan.ID}', '{loan.ClientID}', {loan.Number}, " +
-                        loan.Size.ToString(CultureInfo.InvariantCulture) + ", " + loan.Rate.ToString(CultureInfo.InvariantCulture) + (loan.Cap ? ", 1" : ", 0") + ")",
-                        connection).ExecuteNonQuery();
-                    }
-                }
-                catch
-                {
-                    throw;
-                }
-            return columnName;
-        }
         private void CellChanged(object e)
         {
+            string DBChanged()
+            {
+                void SetNewRowView(Account loan)
+                {
+                    int lastRowIndex = loansTable.Rows.Count - 1;
+                    loansTable.Rows[lastRowIndex][0] = loan.ID;
+                    loansTable.Rows[lastRowIndex][1] = loan.ClientID;
+                    loansTable.Rows[lastRowIndex][2] = loan.Number;
+                    loansTable.Rows[lastRowIndex][3] = loan.Size;
+                    loansTable.Rows[lastRowIndex][4] = loan.Rate;
+                    loansTable.Rows[lastRowIndex][5] = loan.Cap;
+                    loansTable.AcceptChanges();
+                    DataSource = DataView = loansTable.DefaultView;
+                }
+                // Определяем имя поля, с которым связан столбец с отредактированной ячейкой.
+                string editedColumnName = added.Value ? (curColumn.ClipboardContentBinding as Binding).Path.Path : (editedColumn.ClipboardContentBinding as Binding).Path.Path;
+                // Свойству columnName объекта класса Loan присваиваем значение, кторое возвращает
+                // расширяющий обобщенный метод dataRowView.Row.Field<T>(editedColumnName).
+                // Тип T является типом поля столбца columnName, т.е. dataRowView.Row.Table.Columns[editedColumnName].DataType.
+                typeof(Account).GetProperty(editedColumnName).SetValue(Loan,
+                    // Вызываем метод dataRowView.Row.Field<T>(columnName), где тип T есть dataRowView.Row.Table.Columns[editedColumnName].DataType
+                    // Для этого получаем MethodInfo метода Field,
+                    typeof(DataRowExtensions).GetMethod("Field", new Type[] { typeof(DataRow), typeof(string) }).
+                    // создаем статический метод Field<T> класса DataRowExtension, где тип T есть dataRowView.Row.Table.Columns[editedColumnName].DataType,
+                    // и вызываем его над объектом dataRowView.Row с параметром columnName
+                    MakeGenericMethod(dataRowView.Row.Table.Columns[editedColumnName].DataType).Invoke(null, new object[] { dataRowView.Row, editedColumnName }));
+                using (SqlConnection connection = new SqlConnection() { ConnectionString = App.ConnectionString })
+                    try
+                    {
+                        connection.Open();
+                        if (!added.Value)
+                        {
+                            new SqlCommand($"update {loansTable} set Size = " + loan.Size.ToString(CultureInfo.InvariantCulture) +
+                                ", Rate = " + loan.Rate.ToString(CultureInfo.InvariantCulture) + ", Cap = " + (loan.Cap ? "1" : "0") +
+                                $"where Id = '{loan.ID}'", connection).ExecuteNonQuery();
+                        }
+                        else
+                        {
+                            SetNewRowView(loan);
+                            new SqlCommand($"insert into {loansTable} values ('{loan.ID}', '{loan.ClientID}', {loan.Number}, " +
+                            loan.Size.ToString(CultureInfo.InvariantCulture) + ", " + loan.Rate.ToString(CultureInfo.InvariantCulture) + (loan.Cap ? ", 1" : ", 0") + ")",
+                            connection).ExecuteNonQuery();
+                        }
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+                return editedColumnName;
+            }
+            string comment;
             if (MainViewModel.DBMode)
             {
-                DataGrid dataGrid = (DataGrid)e;
-                if (dataGrid.CurrentColumn == null)
-                    return;
-                // Отфильтровываем смену ячейки в одной и той же строке.
-                DataGridCellInfo cell = dataGrid.CurrentCell;
-                if (endEdited && cell != cellView && (DataRowView)cell.Item == DataRowView)
+                DataGridCellInfo cell = (e as DataGrid).CurrentCell;
+                curColumn = cell.Column;
+                editedColumn = editedCell.Column;
+                //MessageBox.Show("CurrentCellChanged\n" +
+                //    "Edited Column: " + (editedColumn != null ? (editedColumn.ClipboardContentBinding as Binding).Path.Path : "null") +
+                //    "\nCur Column: " + (curColumn != null ? (curColumn.ClipboardContentBinding as Binding).Path.Path : "null") +
+                //    $"\nEndEdited = {endEdited}" +
+                //    "\nadded = " + (added == null ? "null" : $"{added}"));
+                if (curColumn == null)
                 {
-                    int rowIndex = DataView.Table.Rows.IndexOf(DataRowView.Row),
-                        columnIndex = cellView.Column.DisplayIndex;
+                    endEdited = false; editedCell = cell; added = null;
+                    return;
+                }
+                if (endEdited && cell != editedCell && cell.Item.ToString() != "{NewItemPlaceholder}" && (DataRowView)cell.Item == DataRowView)
+                {
+                    if (added == null)
+                    { endEdited = false; editedCell = cell; return; }
+                    int rowIndex = added != null && added.Value ? DataView.Table.Rows.Count - 1 : DataView.Table.Rows.IndexOf(DataRowView.Row),
+                        columnIndex = editedCell.Column.DisplayIndex;
                     loansTable.Rows[rowIndex][columnIndex] = DataRowView[columnIndex];
                     loansTable.AcceptChanges();
                     DataSource = DataView = loansTable.DefaultView;
-                    MessageBox.Show("После редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    MessageBox.Show("Для завершения редактирования ячейки надо нажать Enter или перейти на следующую строку.");
                     endEdited = false;
                     added = null;
                     return;
                 }
-                cellView = cell;
+                editedCell = cell;
+                if (added == null)
+                    return;
+                comment = DBChanged();
+                comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : "Поле " + comment + $" кредита №{loan.Number} отредактировано.";
             }
-            if (added == null)
-                return;
-            string comment = string.Empty;
-            if (MainViewModel.DBMode)
-                comment = DBChanged(e);
-            comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" :
-                MainViewModel.DBMode ? "Поле " + comment + $" кредита №{loan.Number} отредактировано." : $"Поля кредита №{loan.Number} отредактированы.";
+            else
+            {
+                if (added == null)
+                    return;
+                comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : $"Поля кредита №{loan.Number} отредактированы.";
+            }
             MainViewModel.Log(comment);
             MessageBox.Show(comment);
             added = null;
         }
+        #endregion
+        #endregion
     }
 }

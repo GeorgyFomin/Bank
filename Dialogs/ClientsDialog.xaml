@@ -13,7 +13,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Button Style="{StaticResource headerBtn}" Content="Ok" HorizontalAlignment="Left" VerticalAlignment="Top" Width="110" Command="{Binding OKCommand}" 
+        <Button Style="{StaticResource headerBtn}" Content="Ok" HorizontalAlignment="Left" VerticalAlignment="Top" Width="110" Command="{Binding OKClientSelectionCommand}" 
                 IsEnabled="{Binding ClientDoSelected}" CommandParameter="{Binding ElementName=clientsDialog}" IsDefault="True" FontSize="20" />
         <TextBlock Grid.Row="1" Text="Select Client Name" FontSize="20"/>
         <ListBox Style="{StaticResource ResourceKey=BlackNavy}" Grid.Row="2" x:Name="clientListBox" HorizontalAlignment="Left" Height="Auto" 

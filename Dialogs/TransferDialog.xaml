@@ -15,8 +15,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Button Style="{StaticResource headerBtn}" Content="Ok" HorizontalAlignment="Left" VerticalAlignment="Top" Width="50" Command="{Binding OKDepoToCommand}" 
-                IsEnabled="{Binding TransferOKEnabled}" CommandParameter="{Binding ElementName=transferDialog}" IsDefault="True" FontSize="20"/>
+        <Button Style="{StaticResource headerBtn}" Content="Ok" HorizontalAlignment="Left" VerticalAlignment="Top" Width="50" Command="{Binding OKTransferCommand}" 
+                IsEnabled="{Binding TransferSumOKEnabled}" CommandParameter="{Binding ElementName=transferDialog}" IsDefault="True" FontSize="20"/>
         <TextBlock Grid.Row="1" VerticalAlignment="Center" Text = " Сумма to Transfer" FontSize="20"/>
         <TextBox x:Name="TrasferBox" Grid.Row="2" FontSize="20" Width="200" Foreground="Yellow" Background="Black" Text="{Binding TransferAmount}" IsEnabled="{Binding TransferEnabled}" 
                  HorizontalAlignment="Left">
@@ -37,7 +37,7 @@
             </ListBox.ItemTemplate>
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="SelectionChanged">
-                    <i:InvokeCommandAction Command="{Binding DepoToSelectedCommand}" CommandParameter="{Binding ElementName=depoToListBox}"/>
+                    <i:InvokeCommandAction Command="{Binding TargetTransferDepoSelectionChangedCommand}" CommandParameter="{Binding ElementName=depoToListBox}"/>
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </ListBox>
