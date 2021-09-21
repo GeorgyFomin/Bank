@@ -368,15 +368,12 @@ namespace WpfBank.ViewModels
                 // Отфильтровываем смену ячейки с переходом в другой столбец.
                 if (endEdited && cell != editedCell && cell.Item.ToString() != "{NewItemPlaceholder}" && (DataRowView)cell.Item == DataRowView)
                 {
-                    if (added == null)
-                    { endEdited = false; editedCell = cell; return; }
-                    int rowIndex = added != null && added.Value ? DataView.Table.Rows.Count - 1 : DataView.Table.Rows.IndexOf(DataRowView.Row),
-                        columnIndex = editedColumn.DisplayIndex;
-                    depositsTable.Rows[rowIndex][columnIndex] = DataView.Table.Rows[rowIndex][columnIndex];
-                    depositsTable.AcceptChanges();
-                    DataSource = DataView = depositsTable.DefaultView;
-                    MessageBox.Show("После редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    editedCell = cell;
                     endEdited = false;
+                    if (added == null) return;
+                    MessageBox.Show("После редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    depositsTable.AcceptChanges();
+                    RaisePropertyChanged(nameof(DataSource));
                     added = null;
                     return;
                 }
@@ -393,7 +390,7 @@ namespace WpfBank.ViewModels
                 comment = added.Value ? $"Клиенту {client} открыт депозит {depo}" : $"Поля депозита №{depo.Number} отредактированы.";
             }
             MainViewModel.Log(comment);
-            MessageBox.Show(comment);
+            //MessageBox.Show(comment);
             added = null;
         }
         private void SelectNewDepositClient(object e)

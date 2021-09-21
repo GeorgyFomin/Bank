@@ -322,21 +322,17 @@ namespace WpfBank.ViewModels
                 }
                 if (endEdited && cell != editedCell && cell.Item.ToString() != "{NewItemPlaceholder}" && (DataRowView)cell.Item == DataRowView)
                 {
-                    if (added == null)
-                    { endEdited = false; editedCell = cell; return; }
-                    int rowIndex = added != null && added.Value ? DataView.Table.Rows.Count - 1 : DataView.Table.Rows.IndexOf(DataRowView.Row),
-                        columnIndex = editedCell.Column.DisplayIndex;
-                    loansTable.Rows[rowIndex][columnIndex] = DataRowView[columnIndex];
-                    loansTable.AcceptChanges();
-                    DataSource = DataView = loansTable.DefaultView;
-                    MessageBox.Show("Для завершения редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    editedCell = cell;
                     endEdited = false;
+                    if (added == null) return;
+                    MessageBox.Show("Для завершения редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    loansTable.AcceptChanges();
+                    RaisePropertyChanged(nameof(DataSource));
                     added = null;
                     return;
                 }
                 editedCell = cell;
-                if (added == null)
-                    return;
+                if (added == null) return;
                 comment = DBChanged();
                 comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : "Поле " + comment + $" кредита №{loan.Number} отредактировано.";
             }
@@ -347,7 +343,7 @@ namespace WpfBank.ViewModels
                 comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : $"Поля кредита №{loan.Number} отредактированы.";
             }
             MainViewModel.Log(comment);
-            MessageBox.Show(comment);
+            //MessageBox.Show(comment);
             added = null;
         }
         #endregion
