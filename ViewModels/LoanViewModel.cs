@@ -190,6 +190,10 @@ namespace WpfBank.ViewModels
         #region Handlers
         private void SelectLoan(object e)
         {
+            //MessageBox.Show("Selection Changed\n" +
+            //    "Edited Column: " + (editedColumn != null ? (editedColumn.ClipboardContentBinding as Binding).Path.Path : "null") +
+            //    "\nCur Column: " + (curColumn != null ? (curColumn.ClipboardContentBinding as Binding).Path.Path : "null") +
+            //    "\nadded = " + (added == null ? "null" : $"{added}"));
             // Получаем ссылку строку, выбранную в DataGrid.
             object selItem = (e as DataGrid).SelectedItem;
             // Фильтруем ссылку.
@@ -228,6 +232,10 @@ namespace WpfBank.ViewModels
         }
         private void EditLoan(object e)
         {
+            //MessageBox.Show("CellEditEnding\n" +
+            //    "Edited Column: " + (editedColumn != null ? (editedColumn.ClipboardContentBinding as Binding).Path.Path : "null") +
+            //    "\nCur Column: " + (curColumn != null ? (curColumn.ClipboardContentBinding as Binding).Path.Path : "null") +
+            //    "\nadded = " + (added == null ? "null" : $"{added}"));
             void InsertLoanIntoClient()
             {
                 loan.ClientID = client.ID;
@@ -307,7 +315,8 @@ namespace WpfBank.ViewModels
             string comment;
             if (MainViewModel.DBMode)
             {
-                DataGridCellInfo cell = (e as DataGrid).CurrentCell;
+                DataGrid dataGrid = e as DataGrid;
+                DataGridCellInfo cell = dataGrid.CurrentCell;
                 curColumn = cell.Column;
                 editedColumn = editedCell.Column;
                 //MessageBox.Show("CurrentCellChanged\n" +
@@ -325,11 +334,12 @@ namespace WpfBank.ViewModels
                     editedCell = cell;
                     endEdited = false;
                     if (added == null) return;
-                    MessageBox.Show("Для завершения редактирования ячейки надо нажать Enter или перейти на следующую строку.");
-                    loansTable.AcceptChanges();
-                    RaisePropertyChanged(nameof(DataSource));
-                    added = null;
-                    return;
+                    dataGrid.CommitEdit();
+                    //MessageBox.Show("Для завершения редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    //loansTable.AcceptChanges();
+                    //RaisePropertyChanged(nameof(DataSource));
+                    //added = null;
+                    //return;
                 }
                 editedCell = cell;
                 if (added == null) return;
@@ -343,7 +353,7 @@ namespace WpfBank.ViewModels
                 comment = added.Value ? $"Клиенту {client} открыт кредит {loan}" : $"Поля кредита №{loan.Number} отредактированы.";
             }
             MainViewModel.Log(comment);
-            //MessageBox.Show(comment);
+            MessageBox.Show(comment);
             added = null;
         }
         #endregion

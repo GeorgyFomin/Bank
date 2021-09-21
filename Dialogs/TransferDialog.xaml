@@ -26,18 +26,24 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </TextBox>
-        <TextBlock Grid.Row="3" Text="Transfer To Account" FontSize="20"/>
-        <ListBox Style="{StaticResource ResourceKey=BlackNavy}" Grid.Row="4" x:Name="depoToListBox" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="200"
+        <TextBlock Grid.Row="3" Text="Target deposits" FontSize="20"/>
+        <ListBox Style="{StaticResource ResourceKey=BlackNavy}" Grid.Row="4" x:Name="targetDepoListBox" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="200"
                   ItemsSource="{Binding Deposits}" FontSize="20" >
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding Path=Number}" 
-                       ToolTipService.ToolTip="{Binding Path=Size}"/>
+                    <TextBlock Text="{Binding Number}">
+                        <ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal" Style ="{StaticResource ResourceKey=BlackNavy}">
+                                <TextBlock Text="Dep size: "/>
+                                <TextBlock Text="{Binding Size}"/>
+                            </StackPanel>
+                        </ToolTipService.ToolTip>
+                    </TextBlock>
                 </DataTemplate>
             </ListBox.ItemTemplate>
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="SelectionChanged">
-                    <i:InvokeCommandAction Command="{Binding TargetTransferDepoSelectionChangedCommand}" CommandParameter="{Binding ElementName=depoToListBox}"/>
+                    <i:InvokeCommandAction Command="{Binding TargetTransferDepoSelectionChangedCommand}" CommandParameter="{Binding ElementName=targetDepoListBox}"/>
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </ListBox>

@@ -16,7 +16,7 @@
         <StackPanel Orientation="Horizontal">
             <TextBlock Text="Deposits" FontSize="20"/>
             <Button Content="Оформить перевод" Style="{StaticResource headerBtn}" FontSize="20" Background="#00000000" Margin="10,0,0,0" 
-                    IsDefault="True" Command="{Binding TransferCommand}" IsEnabled="{Binding DepoFromSelected}" BorderBrush="#FF40E80F">
+                    IsDefault="True" Command="{Binding TransferCommand}" IsEnabled="{Binding SourceTransferDepoSelected}" BorderBrush="#FF40E80F">
             </Button>
         </StackPanel>
         <DataGrid RowHeaderStyle="{StaticResource BlackNavy}" Style="{StaticResource ResourceKey=BlackNavy}" x:Name="depoGrid" Grid.Row="1" 
@@ -31,18 +31,6 @@
                 <DataGridTextColumn Header="Rate" Binding="{Binding Rate}" EditingElementStyle="{StaticResource EditingCellTextBox}"/>
                 <DataGridCheckBoxColumn x:Name="CapCheck" Header="Cap" Binding="{Binding Cap}"
                 EditingElementStyle="{StaticResource EditCheckboxStyle}" ElementStyle="{StaticResource ElementCheckBoxStyle}"/>
-                <!--<DataGridCheckBoxColumn.ElementStyle>
-                        <Style TargetType="CheckBox" BasedOn="{StaticResource ElementCheckBoxStyle}">
-                            -->
-                <!--<Style.Setters>
-                                <Setter Property="Command" Value="{Binding DataContext.SelCommand, Mode=OneWay,RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
-                                <Setter Property="CommandParameter" Value="{Binding ElementName=depoGrid}"/>
-                                <Setter Property="Command" Value="{Binding DataContext.EndDepoEditCommand, Mode=OneWay,RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
-                                <Setter Property="CommandParameter" Value="{Binding ElementName=depoGrid}"/>
-                            </Style.Setters>-->
-                <!--
-                        </Style>
-                    </DataGridCheckBoxColumn.ElementStyle>-->
             </DataGrid.Columns>
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="SelectionChanged">

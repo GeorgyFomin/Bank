@@ -1,4 +1,6 @@
-﻿using System.Windows.Input;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using WpfBank.Commands;
 using ClassLibrary;
 using System.Collections.ObjectModel;
@@ -94,6 +96,10 @@ namespace WpfBank.ViewModels
         /// Хранит величину перевода.
         /// </summary>
         private decimal transferAmount;
+        /// <summary>
+        /// Хранит флаг активации списка депозитов, на который могут быть переведены средства.
+        /// </summary>
+        private bool targetTransferListEnabled;
         #endregion
         #region Команды управления событиями
         private RelayCommand selectionChangedCommand;
@@ -119,15 +125,14 @@ namespace WpfBank.ViewModels
             {
                 ObservableCollection<Account> deposits = new ObservableCollection<Account>();
                 foreach (Dep dep in bank.Deps)
-                {
                     foreach (Client client in dep.Clients)
-                    {
                         foreach (Account deposit in client.Deposits)
                         {
-                            deposits.Add(deposit);
+                            // Блокируем появление в списке депозитов, на которые могут быть переведены средства, депозит Depo, с которого средства списываются.
+                            if (!targetTransferListEnabled || deposit.ID != Depo?.ID)
+                                deposits.Add(deposit);
                         }
-                    }
-                }
+
                 return deposits;
             }
         }
@@ -140,12 +145,8 @@ namespace WpfBank.ViewModels
             {
                 ObservableCollection<Client> clients = new ObservableCollection<Client>();
                 foreach (Dep dep in bank.Deps)
-                {
                     foreach (Client client in dep.Clients)
-                    {
                         clients.Add(client);
-                    }
-                }
                 return clients;
             }
         }
@@ -352,7 +353,8 @@ namespace WpfBank.ViewModels
             string comment;
             if (MainViewModel.DBMode)
             {
-                DataGridCellInfo cell = (e as DataGrid).CurrentCell;
+                DataGrid dataGrid = e as DataGrid;
+                DataGridCellInfo cell = dataGrid.CurrentCell;
                 curColumn = cell.Column;
                 editedColumn = editedCell.Column;
                 //MessageBox.Show("CurrentCellChanged\n" +
@@ -371,11 +373,12 @@ namespace WpfBank.ViewModels
                     editedCell = cell;
                     endEdited = false;
                     if (added == null) return;
-                    MessageBox.Show("После редактирования ячейки надо нажать Enter или перейти на следующую строку.");
-                    depositsTable.AcceptChanges();
-                    RaisePropertyChanged(nameof(DataSource));
-                    added = null;
-                    return;
+                    dataGrid.CommitEdit();
+                    //MessageBox.Show("После редактирования ячейки надо нажать Enter или перейти на следующую строку.");
+                    //depositsTable.AcceptChanges();
+                    //RaisePropertyChanged(nameof(DataSource));
+                    //added = null;
+                    //return;
                 }
                 editedCell = cell;
                 if (added == null)
@@ -390,7 +393,7 @@ namespace WpfBank.ViewModels
                 comment = added.Value ? $"Клиенту {client} открыт депозит {depo}" : $"Поля депозита №{depo.Number} отредактированы.";
             }
             MainViewModel.Log(comment);
-            //MessageBox.Show(comment);
+            MessageBox.Show(comment);
             added = null;
         }
         private void SelectNewDepositClient(object e)
@@ -439,23 +442,28 @@ namespace WpfBank.ViewModels
                     MessageBox.Show(comment);
                 }
                 TransferDialog dialog = new TransferDialog { DataContext = this };
+                RaisePropertyChanged(nameof(Deposits));
                 if ((bool)dialog.ShowDialog() && targetTransferDepo != null)
                     DoTransfer();
             }
             if (depo == null || depo.ClientID == default)
                 return;
+            // Блокируем появление в списке депозитов, на которые могут быть переведены средства, депозит, с которого средства списываются.
+            targetTransferListEnabled = true;
             TryToTransfer();
+            targetTransferListEnabled = false;
+            // Снимаем блокировку со списка доступных депозитов.
             RaisePropertyChanged(nameof(Deposits));
         }
         private void SelectTargetTransferDepo(object e)
         {
             if ((TargetTransferDepo = (e as ListBox).SelectedItem is Account account ? account : null) == null)
                 return;
-            if (!(TransferEnabled = targetTransferDepo.ID != Depo.ID))
-            {
-                MessageBox.Show("Нельзя делать перевод внутри одного и того же счета!!");
-                return;
-            }
+            //if (!(TransferEnabled = targetTransferDepo.ID != Depo.ID))
+            //{
+            //    MessageBox.Show("Нельзя делать перевод внутри одного и того же счета!!");
+            //    return;
+            //}
             // Инициализируем флаг подтверждения перевода запрошенной суммы.
             TransferSumOKEnabled = false;
         }
