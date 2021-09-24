@@ -216,6 +216,7 @@ namespace WpfBank.ViewModels
         #region Handlers
         private void SelectClient(object e)
         {
+            //MessageBox.Show("Selection Changed\nadded = " + (added == null ? "null" : $"{added}"));
             // Получаем ссылку на строку, выбранную в DataGrid.
             object selItem = (e as DataGrid).SelectedItem;
             // Фильтруем ссылку.
@@ -278,6 +279,7 @@ namespace WpfBank.ViewModels
         }
         private void EditClient(object e)
         {
+            //MessageBox.Show("CellEditEnding\nadded = " + (added == null ? "null" : $"{added}"));
             void InsertClientIntoDepartment()
             {
                 client.DepID = dep.ID;
@@ -301,6 +303,7 @@ namespace WpfBank.ViewModels
         }
         private void CellChanged(object e)
         {
+            //MessageBox.Show("CurrentCellChanged\nadded = " + (added == null ? "null" : $"{added}"));
             if (added == null)
                 return;
             void DBChanged()
@@ -351,7 +354,7 @@ namespace WpfBank.ViewModels
                 DBChanged();
             string comment = added.Value ? $"В отдел {dep} добавлен клиент {client}" : $"Клиент {client} отредактирован";
             MainViewModel.Log(comment);
-            MessageBox.Show(comment);
+            //MessageBox.Show(comment);
             added = null;
         }
         #endregion

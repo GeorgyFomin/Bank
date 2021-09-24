@@ -33,10 +33,7 @@
                 <DataTemplate>
                     <TextBlock Text="{Binding Number}">
                         <ToolTipService.ToolTip>
-                            <StackPanel Orientation="Horizontal" Style ="{StaticResource ResourceKey=BlackNavy}">
-                                <TextBlock Text="Dep size: "/>
-                                <TextBlock Text="{Binding Size}"/>
-                            </StackPanel>
+                            <ToolTip Style="{StaticResource ResourceKey=BlackNavy}" Content="{Binding}"/>
                         </ToolTipService.ToolTip>
                     </TextBlock>
                 </DataTemplate>

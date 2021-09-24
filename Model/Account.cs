@@ -53,6 +53,6 @@ namespace ClassLibrary
         /// <param name="tw"></param>
         public void Print(TextWriter tw) => tw.WriteLine(this);
         #endregion
-        public override string ToString() => "№" + $"{Number};Size {Size};Rate {Rate:g3};Cap {Cap}";
+        public override string ToString() => "№" + $"{Number};Size {Size:C2};Rate {Rate:g3};Cap {Cap}";
     }
 }
