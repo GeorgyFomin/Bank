@@ -26,8 +26,7 @@ namespace ClassLibrary
             }
         }
         #endregion
-        public Dep() : base() { }
-        public Dep(string name = null, ObservableCollection<Client> clients = null) : base(name) => Clients = clients;
+        public override string ToString() => "Dep " + base.ToString();
         /// <summary>
         /// Печатает сведения об отделе.
         /// </summary>

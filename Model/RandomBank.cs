@@ -22,7 +22,7 @@ namespace ClassLibrary
         /// Возвращает случайный банк.
         /// </summary>
         /// <returns></returns>
-        static public Bank GetBank() => new Bank(GetRandomString(4, random), GetRandomDeps(random.Next(1, 5), random));
+        static public Bank GetBank() => new Bank() { Name = GetRandomString(4, random), Deps = GetRandomDeps(random.Next(1, 5), random) };
         /// <summary>
         /// Возвращает список случайных отделов.
         /// </summary>
@@ -31,7 +31,7 @@ namespace ClassLibrary
         /// <returns></returns>
         private static ObservableCollection<Dep> GetRandomDeps(int v, Random random) =>
                    new ObservableCollection<Dep>(Enumerable.Range(0, v).
-            Select(index => new Dep(GetRandomString(random.Next(1, 6), random), GetRandomClients(random.Next(1, 20), random))));
+            Select(index => new Dep() { Name = GetRandomString(random.Next(1, 6), random), Clients = GetRandomClients(random.Next(1, 20), random) }));
         /// <summary>
         /// Возвращает список случайных клиентов.
         /// </summary>
@@ -40,8 +40,12 @@ namespace ClassLibrary
         /// <returns></returns>
         private static ObservableCollection<Client> GetRandomClients(int v, Random random) =>
             new ObservableCollection<Client>(Enumerable.Range(0, v).
-            Select(index => new Client(GetRandomString(random.Next(3, 6), random),
-                GetRandomAccounts(random.Next(1, 5), random), GetRandomAccounts(random.Next(1, 5), random))).ToList());
+            Select(index => new Client()
+            {
+                Name = GetRandomString(random.Next(3, 6), random),
+                Deposits = GetRandomAccounts(random.Next(1, 5), random),
+                Loans = GetRandomAccounts(random.Next(1, 5), random)
+            }).ToList());
         /// <summary>
         /// Возвращает список случайных счетов.
         /// </summary>

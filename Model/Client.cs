@@ -50,13 +50,7 @@ namespace ClassLibrary
         /// </summary>
         public Guid DepID { get; set; }
         #endregion
-        public Client() : base() { }
-        public Client(string name = null, ObservableCollection<Account> deposits = null, ObservableCollection<Account> loans = null) : base(name)
-        {
-            Deposits = deposits;
-            Loans = loans;
-        }
-
+        public override string ToString() => "Client " + base.ToString();
         /// <summary>
         /// Печатает сведения о клиенте.
         /// </summary>

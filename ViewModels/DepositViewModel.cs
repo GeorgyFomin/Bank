@@ -464,6 +464,8 @@ namespace WpfBank.ViewModels
             //    MessageBox.Show("Нельзя делать перевод внутри одного и того же счета!!");
             //    return;
             //}
+            // Активируем процесс перевода.
+            TransferEnabled = true;
             // Инициализируем флаг подтверждения перевода запрошенной суммы.
             TransferSumOKEnabled = false;
         }

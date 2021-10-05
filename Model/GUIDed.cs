@@ -10,10 +10,6 @@ namespace ClassLibrary
         /// <summary>
         /// Возвращает уникальный идентификатор.
         /// </summary>
-        public Guid ID { get; } = Guid.NewGuid();
-        /// <summary>
-        /// Инициализирует объект.
-        /// </summary>
-        public GUIDed() { }
+        public Guid ID { get; private set; } = Guid.NewGuid();
     }
 }

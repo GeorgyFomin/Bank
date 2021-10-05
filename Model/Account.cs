@@ -15,7 +15,7 @@ namespace ClassLibrary
         /// <summary>
         /// Возвращает номер счета.
         /// </summary>
-        public uint Number { get; }
+        public int Number { get; }
         /// <summary>
         /// Устанавливает и возвращает ссылку на ID клиента, которому принадлежит счет.
         /// </summary>
@@ -33,7 +33,7 @@ namespace ClassLibrary
         /// </summary>
         public bool Cap { get; set; }
         #endregion
-        public Account() : base() => Number = (uint)GetHashCode();
+        public Account() => Number = GetHashCode();
         public string AccFields() => $"{Number,-16}{Size,-16:n}\t{Rate:g3}\t{Cap}";
         public string Info() => string.Format(header + "\n" + AccFields());
         #region Printing
